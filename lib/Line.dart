@@ -1,3 +1,4 @@
+import 'package:editor_app/Cursor.dart';
 import 'package:editor_app/utils/isShortcut.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -14,27 +15,18 @@ class Line extends StatefulWidget {
 class _Line extends State<Line> with SingleTickerProviderStateMixin {
   String lineText = '';
   final FocusNode _focusNode = FocusNode();
-  late final AnimationController _cursorController;
-  bool _showCursor = true;
 
   @override
   void initState() {
     super.initState();
-    _focusNode.requestFocus();
-    _cursorController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 900),
-    )..addListener(() {
-      setState(() {
-        _showCursor = _cursorController.value < 0.5;
-      });
-    })..repeat();
+     WidgetsBinding.instance.addPostFrameCallback((_) {
+      _focusNode.requestFocus();
+    });
   }
 
   @override
   void dispose() {
     _focusNode.dispose();
-    _cursorController.dispose();
     super.dispose();
   }
 
@@ -42,7 +34,9 @@ class _Line extends State<Line> with SingleTickerProviderStateMixin {
   Widget build(BuildContext context) {
 
     return Focus(
+      autofocus: true,
       focusNode: _focusNode,
+      onFocusChange: (hasFocus) => setState(() {}),
       onKeyEvent: (node, event) {
         if (event is! KeyDownEvent || isShortcut()) {
           return KeyEventResult.ignored;
@@ -66,12 +60,8 @@ class _Line extends State<Line> with SingleTickerProviderStateMixin {
         child: Row(
           children: [
             Text(lineText),
-            if (_showCursor) 
-              Container(
-                width: 2,
-                height: 16,
-                color: Colors.black
-              ),
+            if (_focusNode.hasFocus)
+              Cursor()
           ]
         )
       )

@@ -1,3 +1,4 @@
+import 'package:editor_app/Line.dart';
 import 'package:flutter/material.dart';
 
 void main() {
@@ -32,8 +33,9 @@ class AppContainer extends StatelessWidget {
       width: double.infinity,
       height: double.infinity,
       color: Theme.of(context).colorScheme.inversePrimary,
-      child: (
-        Text('Hello')
+      child: Align(
+        alignment: Alignment.topLeft,
+        child: Line(text: '')
       ),
     );
   }

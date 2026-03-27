@@ -1,3 +1,4 @@
+import 'package:editor_app/AppwideKeyboardFocus.dart';
 import 'package:editor_app/Line.dart';
 import 'package:flutter/material.dart';
 
@@ -29,14 +30,16 @@ class AppContainer extends StatelessWidget {
   const AppContainer({super.key});
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      height: double.infinity,
-      color: Theme.of(context).colorScheme.inversePrimary,
-      child: Align(
-        alignment: Alignment.topLeft,
-        child: Line(text: '')
-      ),
+    return Appwidekeyboardfocus(
+      child: Container(
+        width: double.infinity,
+        height: double.infinity,
+        color: Theme.of(context).colorScheme.inversePrimary,
+        child: Align(
+          alignment: Alignment.topLeft,
+          child: Line(text: '')
+        ),
+      )
     );
   }
 }

@@ -11,19 +11,30 @@ class Line extends StatefulWidget {
   State<Line> createState() => _Line();
 }
 
-class _Line extends State<Line> {
+class _Line extends State<Line> with SingleTickerProviderStateMixin {
   String lineText = '';
   final FocusNode _focusNode = FocusNode();
+  late final AnimationController _cursorController;
+  bool _showCursor = true;
 
   @override
   void initState() {
     super.initState();
     _focusNode.requestFocus();
+    _cursorController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 900),
+    )..addListener(() {
+      setState(() {
+        _showCursor = _cursorController.value < 0.5;
+      });
+    })..repeat();
   }
 
   @override
   void dispose() {
     _focusNode.dispose();
+    _cursorController.dispose();
     super.dispose();
   }
 
@@ -52,7 +63,17 @@ class _Line extends State<Line> {
         height: 16,
         width: double.infinity,
         color: Colors.lightGreen,
-        child: Text(lineText)
+        child: Row(
+          children: [
+            Text(lineText),
+            if (_showCursor) 
+              Container(
+                width: 2,
+                height: 16,
+                color: Colors.black
+              ),
+          ]
+        )
       )
     );
   }

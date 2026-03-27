@@ -7,15 +7,6 @@
  * 4. A way to get the concatenated string
  * 5. Use this in the delete function
  */
-
-
-/**
- * ToDo:
- * 1. During fragmentation, there can be pieces with empty strings. All of them need to be removed.
- * 2. Merging of pieces should be implemented and tested.
- * 3. piecableString needs to be implemented.
- */
-
 typedef Piece = String;
 typedef PieceDetails = Map<String, int>;
 typedef FragmentedPieces = List<Piece>;
@@ -107,6 +98,10 @@ class PiecableString {
     return result;
   }
 
+  FragmentedPieces _generateNonEmptyFragments (FragmentedPieces items) {
+    return items.where((item) => item.isNotEmpty).toList();
+  }
+
   FragmentedPieces _fragmentPieceAtIndex (Piece piece, int index) {
     return [piece.substring(0, index), piece.substring(index)];
   }
@@ -130,7 +125,11 @@ class PiecableString {
     int breakIndex = position - strStartIndex;
     var [part1, part2] = _fragmentPieceAtIndex(pieces[affectedPieceIndex], breakIndex);
 
-    pieces.replaceRange(affectedPieceIndex, affectedPieceIndex + 1, [part1, toInsert, part2]);
+    pieces.replaceRange(
+      affectedPieceIndex,
+      affectedPieceIndex + 1,
+      _generateNonEmptyFragments([part1, toInsert, part2])
+    );
   }
 
   void delete (int position, int len) {
@@ -150,7 +149,11 @@ class PiecableString {
     var [part1, _] = _fragmentPieceAtIndex(pieces[startPieceIndex], strStartIndex);
     var [_, part2] = _fragmentPieceAtIndex(pieces[endPieceIndex], strEndIndex);
 
-    pieces.replaceRange(startPieceIndex, endPieceIndex + 1, [part1, part2]);
+    pieces.replaceRange(
+      startPieceIndex,
+      endPieceIndex + 1,
+      _generateNonEmptyFragments([part1, part2])
+      );
   }
 
   void mergePieces () {

@@ -1,12 +1,10 @@
 
-/**
- * What do I need?
- * 1. An array for the pieces. This array will hold all the strings and the indices - we will call each of them a Piece
- * 2. A definition of the Piece object itself.
- * 3. Use this in the insert function.
- * 4. A way to get the concatenated string
- * 5. Use this in the delete function
- */
+/// What do I need?
+/// 1. An array for the pieces. This array will hold all the strings and the indices - we will call each of them a Piece
+/// 2. A definition of the Piece object itself.
+/// 3. Use this in the insert function.
+/// 4. A way to get the concatenated string
+/// 5. Use this in the delete function
 typedef Piece = String;
 typedef PieceDetails = Map<String, int>;
 typedef FragmentedPieces = List<Piece>;

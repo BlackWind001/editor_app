@@ -19,6 +19,7 @@ class _Line extends State<Line> with SingleTickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
+    lineText = widget.text;
      WidgetsBinding.instance.addPostFrameCallback((_) {
       _focusNode.requestFocus();
     });

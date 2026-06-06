@@ -1,4 +1,5 @@
 import 'package:editor_app/Cursor.dart';
+import 'package:editor_app/PiecableString.dart';
 import 'package:editor_app/utils/isShortcut.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -14,12 +15,16 @@ class Line extends StatefulWidget {
 
 class _Line extends State<Line> with SingleTickerProviderStateMixin {
   String lineText = '';
+  late PiecableString pcStr;
+  late int cursorPosition;
   final FocusNode _focusNode = FocusNode();
 
   @override
   void initState() {
     super.initState();
     lineText = widget.text;
+    pcStr = PiecableString(originalString: lineText);
+    cursorPosition = lineText.length;
      WidgetsBinding.instance.addPostFrameCallback((_) {
       _focusNode.requestFocus();
     });
@@ -45,13 +50,27 @@ class _Line extends State<Line> with SingleTickerProviderStateMixin {
 
         String? key = event.character;
 
-        if (key == null) {
+
+        if (event.logicalKey == LogicalKeyboardKey.backspace) {
+          setState(() {
+            pcStr.delete(cursorPosition-1, 1);
+            cursorPosition -=1;
+          });
+
+          return KeyEventResult.handled;
+        }
+        else if (event.logicalKey == LogicalKeyboardKey.enter) {
+          // Add code here to somehow create a new line
+        }
+        else if (key == null) {
           return KeyEventResult.ignored;
         }
-
-        setState(() {
-          lineText += key;
-        });
+        else {
+          setState(() {
+            pcStr.insert(cursorPosition, key);
+            cursorPosition +=1;
+          });
+        }
         return KeyEventResult.handled;
       },
       child: Container(
@@ -60,7 +79,7 @@ class _Line extends State<Line> with SingleTickerProviderStateMixin {
         color: Colors.lightGreen,
         child: Row(
           children: [
-            Text(lineText),
+            Text(pcStr.piecedValue),
             if (_focusNode.hasFocus)
               Cursor()
           ]

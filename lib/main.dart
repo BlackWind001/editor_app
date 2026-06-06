@@ -40,11 +40,14 @@ class AppContainer extends StatelessWidget {
           color: Theme.of(context).colorScheme.inversePrimary,
           child: Align(
               alignment: Alignment.topLeft,
-              child: Line(text: 'Hello')
+              child: Line(text: 'Hello there, my dear friend')
           )
       ),
     );
 
+    // ToDo: Move the following lines to a separate registerShortcuts function
+    // along with other app wide shortcut registrations.
+    // Also, only register the necessary platform's shortcuts.
     widget.register(
       const KeyPress(key: LogicalKeyboardKey.keyQ, meta: true),
       () => exit(0),

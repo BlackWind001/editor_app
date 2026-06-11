@@ -1,5 +1,5 @@
-import 'package:editor_app/Cursor.dart';
-import 'package:editor_app/PiecableString.dart';
+import 'package:editor_app/base/components/Cursor.dart';
+import 'package:editor_app/base/data-structures/PiecableString.dart';
 import 'package:editor_app/utils/isShortcut.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -74,7 +74,7 @@ class _Line extends State<Line> with SingleTickerProviderStateMixin {
         return KeyEventResult.handled;
       },
       child: Container(
-        height: 16,
+        height: 32,
         width: double.infinity,
         color: Colors.lightGreen,
         child: Row(

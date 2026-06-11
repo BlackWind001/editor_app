@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:editor_app/PiecableString.dart';
+import 'package:editor_app/base/data-structures/PiecableString.dart';
 
 void main() {
   // Helper to get the current concatenated value.

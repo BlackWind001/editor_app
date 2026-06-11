@@ -1,7 +1,7 @@
 import 'dart:io';
 
-import 'package:editor_app/Line.dart';
-import 'package:editor_app/base/KeypressWidget.dart';
+import 'package:editor_app/base/components/Line.dart';
+import 'package:editor_app/base/components/KeypressWidget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 

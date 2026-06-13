@@ -1,13 +1,17 @@
 import 'package:editor_app/base/components/Cursor.dart';
 import 'package:editor_app/base/data-structures/PiecableString.dart';
-import 'package:editor_app/utils/isShortcut.dart';
+import 'package:editor_app/base/models/Document.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+
+typedef LineKeyEventCallback = KeyEventResult Function(FocusNode node, KeyEvent event);
 
 class Line extends StatefulWidget {
-  const Line({super.key, required this.text});
+  const Line({super.key, required this.nLine, required this.text, required this.onKeyEvent, required this.cursorIndex});
 
   final String text;
+  final int? cursorIndex;
+  final NotifyingLine nLine;
+  final LineKeyEventCallback onKeyEvent;
 
   @override
   State<Line> createState() => _Line();
@@ -15,19 +19,23 @@ class Line extends StatefulWidget {
 
 class _Line extends State<Line> with SingleTickerProviderStateMixin {
   String lineText = '';
+  late NotifyingLine nLine;
   late PiecableString pcStr;
-  late int cursorPosition;
+  late int? cursorIndex;
   final FocusNode _focusNode = FocusNode();
 
   @override
   void initState() {
     super.initState();
     lineText = widget.text;
+    nLine  = widget.nLine;
     pcStr = PiecableString(originalString: lineText);
-    cursorPosition = lineText.length;
-     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _focusNode.requestFocus();
-    });
+    cursorIndex = widget.cursorIndex;
+    if (cursorIndex != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _focusNode.requestFocus();
+      });
+    }
   }
 
   @override
@@ -38,52 +46,39 @@ class _Line extends State<Line> with SingleTickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-
+    cursorIndex = widget.cursorIndex;
     return Focus(
       autofocus: true,
       focusNode: _focusNode,
       onFocusChange: (hasFocus) => setState(() {}),
       onKeyEvent: (node, event) {
-        if (event is! KeyDownEvent || isShortcut()) {
-          return KeyEventResult.ignored;
-        }
-
-        String? key = event.character;
-
-
-        if (event.logicalKey == LogicalKeyboardKey.backspace) {
-          setState(() {
-            pcStr.delete(cursorPosition-1, 1);
-            cursorPosition -=1;
-          });
-
-          return KeyEventResult.handled;
-        }
-        else if (event.logicalKey == LogicalKeyboardKey.enter) {
-          // Add code here to somehow create a new line
-        }
-        else if (key == null) {
-          return KeyEventResult.ignored;
-        }
-        else {
-          setState(() {
-            pcStr.insert(cursorPosition, key);
-            cursorPosition +=1;
-          });
-        }
-        return KeyEventResult.handled;
+        return widget.onKeyEvent(node, event);
       },
       child: Container(
         height: 32,
         width: double.infinity,
         color: Colors.lightGreen,
-        child: Row(
-          children: [
-            Text(pcStr.piecedValue),
-            if (_focusNode.hasFocus)
-              Cursor()
-          ]
-        )
+        child: ListenableBuilder(listenable: nLine, builder: (BuildContext context, Widget? child) {
+          final cp = cursorIndex;
+
+          if (cp == null) {
+            return Row(
+              children: [
+                Text(nLine.pcStr.piecedValue)
+              ]
+            );
+          }
+          else {
+            return Row(
+              children: [
+                Text(nLine.pcStr.piecedValue.substring(0, cp)),
+                if (_focusNode.hasFocus)
+                  Cursor(),
+                Text(nLine.pcStr.piecedValue.substring(cp))
+              ]
+            );
+          }
+        })
       )
     );
   }

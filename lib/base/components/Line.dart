@@ -1,12 +1,21 @@
 import 'package:editor_app/base/components/Cursor.dart';
 import 'package:editor_app/base/data-structures/PiecableString.dart';
 import 'package:editor_app/base/models/Document.dart';
+import 'package:editor_app/constants/editor.dart';
 import 'package:flutter/material.dart';
 
-typedef LineKeyEventCallback = KeyEventResult Function(FocusNode node, KeyEvent event);
+typedef LineKeyEventCallback =
+    KeyEventResult Function(FocusNode node, KeyEvent event);
+TextStyle contentStyle = TextStyle(color: PRIMARY_TEXT_COLOR);
 
 class Line extends StatefulWidget {
-  const Line({super.key, required this.nLine, required this.text, required this.onKeyEvent, required this.cursorIndex});
+  const Line({
+    super.key,
+    required this.nLine,
+    required this.text,
+    required this.onKeyEvent,
+    required this.cursorIndex,
+  });
 
   final String text;
   final int? cursorIndex;
@@ -24,17 +33,34 @@ class _Line extends State<Line> with SingleTickerProviderStateMixin {
   late int? cursorIndex;
   final FocusNode _focusNode = FocusNode();
 
+  void requestFocus() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _focusNode.requestFocus();
+    });
+  }
+
   @override
   void initState() {
     super.initState();
     lineText = widget.text;
-    nLine  = widget.nLine;
+    nLine = widget.nLine;
     pcStr = PiecableString(originalString: lineText);
     cursorIndex = widget.cursorIndex;
     if (cursorIndex != null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _focusNode.requestFocus();
-      });
+      requestFocus();
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant Line oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    if (oldWidget.cursorIndex == null && widget.cursorIndex != null) {
+      /**
+       * In order to display the cursor, we first need to request focus.
+       * This enables actions like arrow-down/up keys to focus another line.
+       */
+      requestFocus();
     }
   }
 
@@ -57,29 +83,34 @@ class _Line extends State<Line> with SingleTickerProviderStateMixin {
       child: Container(
         height: 32,
         width: double.infinity,
-        color: Colors.lightGreen,
-        child: ListenableBuilder(listenable: nLine, builder: (BuildContext context, Widget? child) {
-          final cp = cursorIndex;
+        color: cursorIndex == null ? LINE_BACKGROUND : ACTIVE_LINE_BACKGROUND,
+        child: ListenableBuilder(
+          listenable: nLine,
+          builder: (BuildContext context, Widget? child) {
+            final cp = cursorIndex;
 
-          if (cp == null) {
-            return Row(
-              children: [
-                Text(nLine.pcStr.piecedValue)
-              ]
-            );
-          }
-          else {
-            return Row(
-              children: [
-                Text(nLine.pcStr.piecedValue.substring(0, cp)),
-                if (_focusNode.hasFocus)
-                  Cursor(),
-                Text(nLine.pcStr.piecedValue.substring(cp))
-              ]
-            );
-          }
-        })
-      )
+            if (cp == null) {
+              return Row(
+                children: [Text(nLine.pcStr.piecedValue, style: contentStyle)],
+              );
+            } else {
+              return Row(
+                children: [
+                  Text(
+                    nLine.pcStr.piecedValue.substring(0, cp),
+                    style: contentStyle,
+                  ),
+                  if (_focusNode.hasFocus) Cursor(),
+                  Text(
+                    nLine.pcStr.piecedValue.substring(cp),
+                    style: contentStyle,
+                  ),
+                ],
+              );
+            }
+          },
+        ),
+      ),
     );
   }
 }

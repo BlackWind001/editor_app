@@ -29,6 +29,6 @@ class AppContainer extends StatelessWidget {
   const AppContainer({super.key});
   @override
   Widget build(BuildContext context) {
-    return EditorLite();
+    return EditorLite(filePath: '/Users/anirudhms/Desktop/Projects/editor_app/lib/main.dart',);
   }
 }

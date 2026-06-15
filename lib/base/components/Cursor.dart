@@ -39,10 +39,14 @@ class _Cursor extends State<Cursor> with SingleTickerProviderStateMixin {
       return Container(
         width: 2,
         height: 16,
-        color: Colors.black
+        color: Colors.amber
       );
     }
-    return SizedBox.shrink();
+    return Container(
+        width: 2,
+        height: 16,
+        color: Colors.transparent
+      );
     
   }
 }

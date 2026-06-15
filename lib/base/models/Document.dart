@@ -37,7 +37,21 @@ class Document {
         ).toList();
   }
 
-  NotifyingLine lineAtIndex (int lineIndex) {
+  Document.fromLines(List<String> initialLines) {
+    if (initialLines.isEmpty) {
+      _lines = [];
+      return;
+    }
+
+    _lines = initialLines.map(
+      (el) => NotifyingLine(el)
+    ).toList();
+  }
+
+  NotifyingLine? lineAtIndex (int lineIndex) {
+    if (lineIndex < 0 || lineIndex >= _lines.length) {
+      return null;
+    }
     return _lines[lineIndex];
   }
 

@@ -6,7 +6,10 @@ import 'package:flutter/material.dart';
 
 typedef LineKeyEventCallback =
     KeyEventResult Function(FocusNode node, KeyEvent event);
-TextStyle contentStyle = TextStyle(color: PRIMARY_TEXT_COLOR);
+TextStyle contentStyle = TextStyle(
+  color: PRIMARY_TEXT_COLOR,
+  fontSize: FONT_SIZE
+);
 
 class Line extends StatefulWidget {
   const Line({
@@ -81,7 +84,7 @@ class _Line extends State<Line> with SingleTickerProviderStateMixin {
         return widget.onKeyEvent(node, event);
       },
       child: Container(
-        height: 32,
+        height: EDITOR_LINE_HEIGHT,
         width: double.infinity,
         color: cursorIndex == null ? LINE_BACKGROUND : ACTIVE_LINE_BACKGROUND,
         child: ListenableBuilder(

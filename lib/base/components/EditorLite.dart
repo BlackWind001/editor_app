@@ -2,6 +2,7 @@ import 'dart:developer';
 import 'dart:io';
 import 'package:editor_app/base/helpers/FileLoader.dart';
 import 'package:editor_app/base/helpers/inputEffectDelegator.dart';
+import 'package:editor_app/constants/editor.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -30,6 +31,7 @@ class _EditorLite extends State<EditorLite> {
   int cursorLine = 0;
   int cursorIndex = 0;
   List<String> lines = [];
+  final ScrollController _scrollController = ScrollController();
   late Document document;
 
 
@@ -73,7 +75,13 @@ class _EditorLite extends State<EditorLite> {
     }
   }
 
-  bool updateCursorPosition (int updatedLine, int updatedIndex) {
+  @override
+  void dispose () {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  bool updateCursorPosition (int updatedLine, int updatedIndex,{bool skipScroll = false}) {
 
     var currentLine = document.lineAtIndex(updatedLine);
 
@@ -93,6 +101,21 @@ class _EditorLite extends State<EditorLite> {
       cursorLine = updatedLine;
       cursorIndex = updatedIndex;
     });
+
+    if (_scrollController.hasClients) {
+      // Check if the current line is within the viewport
+      var viewportHeight = _scrollController.position.viewportDimension;
+      var offset = _scrollController.offset;
+      var lineTop = EDITOR_LINE_HEIGHT * (updatedLine);
+      var lineBottom = EDITOR_LINE_HEIGHT * (updatedLine + 1);
+
+      if (lineTop < offset) {
+        _scrollController.jumpTo(lineTop);
+      }
+      else if (lineBottom >= (offset + viewportHeight)) {
+        _scrollController.jumpTo(lineBottom - viewportHeight);
+      }
+    }
 
     return true;
   }
@@ -233,6 +256,24 @@ class _EditorLite extends State<EditorLite> {
     return;
   }
 
+  void handleTapDownEvent (int lineIndex, TapDownDetails details) {
+    
+    NotifyingLine nLine = document.lineAtIndex(lineIndex)!;
+    int updatedLine = lineIndex, updatedIndex = cursorIndex;
+    final painter = TextPainter(
+      text: TextSpan(text: nLine.pcStr.piecedValue, style: contentStyle),
+      textDirection: TextDirection.ltr
+    );
+    Offset offset = Offset(details.localPosition.dx, 0);
+
+    painter.layout();
+    updatedIndex = painter.getPositionForOffset(offset).offset;
+
+    print('$updatedIndex');
+
+    updateCursorPosition(updatedLine, updatedIndex);
+  }
+
   KeyEventResult handleKeyEventV2 (int lineIndex, FocusNode node, KeyEvent event) {
     return inputEffectDelegator(
       event: event,
@@ -295,6 +336,7 @@ class _EditorLite extends State<EditorLite> {
           height: double.infinity,
           color: Theme.of(context).colorScheme.inversePrimary,
           child: ListView.builder(
+            controller: _scrollController,
             itemCount: document.getLength(),
             itemBuilder: (context, i) {
               var cPos = cursorLine == i ? cursorIndex : null;
@@ -304,11 +346,14 @@ class _EditorLite extends State<EditorLite> {
                 return null;
               }
 
-              return Line(
-                text: lines[i],
-                onKeyEvent: (FocusNode node, KeyEvent event) => handleKeyEventV2(i, node, event),
-                nLine: currentLine,
-                cursorIndex: cPos
+              return GestureDetector(
+                onTapDown: (TapDownDetails details) { handleTapDownEvent(i, details); },
+                child: Line(
+                  text: lines[i],
+                  onKeyEvent: (FocusNode node, KeyEvent event) => handleKeyEventV2(i, node, event),
+                  nLine: currentLine,
+                  cursorIndex: cPos
+                )
               );
             }
           )

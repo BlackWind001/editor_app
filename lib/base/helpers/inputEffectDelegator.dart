@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 typedef Callback = void Function(KeyEvent event);
-typedef InsertCallback = void Function(String key, KeyEvent event);
+typedef InsertCallback = void Function(String? key, KeyEvent event);
 
 KeyEventResult inputEffectDelegator ({
   required KeyEvent event,
@@ -32,6 +32,10 @@ KeyEventResult inputEffectDelegator ({
     }
     case LogicalKeyboardKey.delete: {
       onDelete(event);
+      break;
+    }
+    case LogicalKeyboardKey.enter: {
+      onInsert(null, event);
       break;
     }
     case LogicalKeyboardKey.arrowUp:

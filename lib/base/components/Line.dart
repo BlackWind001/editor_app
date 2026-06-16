@@ -30,9 +30,7 @@ class Line extends StatefulWidget {
 }
 
 class _Line extends State<Line> with SingleTickerProviderStateMixin {
-  String lineText = '';
   late NotifyingLine nLine;
-  late PiecableString pcStr;
   late int? cursorIndex;
   final FocusNode _focusNode = FocusNode();
 
@@ -45,9 +43,7 @@ class _Line extends State<Line> with SingleTickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
-    lineText = widget.text;
     nLine = widget.nLine;
-    pcStr = PiecableString(originalString: lineText);
     cursorIndex = widget.cursorIndex;
     if (cursorIndex != null) {
       requestFocus();
@@ -57,6 +53,9 @@ class _Line extends State<Line> with SingleTickerProviderStateMixin {
   @override
   void didUpdateWidget(covariant Line oldWidget) {
     super.didUpdateWidget(oldWidget);
+
+    cursorIndex = widget.cursorIndex;
+    nLine = widget.nLine;
 
     if (oldWidget.cursorIndex == null && widget.cursorIndex != null) {
       /**
@@ -75,7 +74,8 @@ class _Line extends State<Line> with SingleTickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    cursorIndex = widget.cursorIndex;
+    String currentLineText = nLine.pcStr.piecedValue;
+
     return Focus(
       autofocus: true,
       focusNode: _focusNode,
@@ -93,18 +93,18 @@ class _Line extends State<Line> with SingleTickerProviderStateMixin {
 
             if (cp == null) {
               return Row(
-                children: [Text(nLine.pcStr.piecedValue, style: contentStyle)],
+                children: [Text(currentLineText, style: contentStyle)],
               );
             } else {
               return Row(
                 children: [
                   Text(
-                    nLine.pcStr.piecedValue.substring(0, cp),
+                    currentLineText.substring(0, cp),
                     style: contentStyle,
                   ),
                   if (_focusNode.hasFocus) Cursor(),
                   Text(
-                    nLine.pcStr.piecedValue.substring(cp),
+                    currentLineText.substring(cp),
                     style: contentStyle,
                   ),
                 ],

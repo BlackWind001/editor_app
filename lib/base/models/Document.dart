@@ -59,12 +59,39 @@ class Document {
     return _lines.length;
   }
 
+  void insertNewLine (int lineIndex, int position) {
+    NotifyingLine? nLine = lineAtIndex(lineIndex);
+
+    if (nLine == null) {
+      return;
+    }
+
+    String line = nLine.pcStr.piecedValue;
+    List<String> newlyAddedLines = [];
+
+    newlyAddedLines.add(line.substring(0, position));
+    newlyAddedLines.add(line.substring(position));
+    
+    _lines.replaceRange(lineIndex, lineIndex + 1, newlyAddedLines.map((el) => NotifyingLine(el)));
+  }
+
   void insertInLine(int lineIndex, int position, Piece toInsert) {
-    _lines[lineIndex].insert(position, toInsert);
+
+    NotifyingLine? nLine = lineAtIndex(lineIndex);
+
+    if (nLine == null) {
+      return;
+    }
+    nLine.insert(position, toInsert);
   }
 
   void deleteFromLine(int lineIndex, int position, int len) {
-    _lines[lineIndex].delete(position, len);
+    NotifyingLine? nLine = lineAtIndex(lineIndex);
+
+    if (nLine == null) {
+      return;
+    }
+    nLine.delete(position, len);
   }
 
 }

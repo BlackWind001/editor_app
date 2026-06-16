@@ -30,13 +30,13 @@ class _EditorLite extends State<EditorLite> {
   String valueOnDisk = '';
   int cursorLine = 0;
   int cursorIndex = 0;
-  List<String> lines = [];
   final ScrollController _scrollController = ScrollController();
   late Document document;
 
 
   void handleInitialFileLoadAndRead (String filePath) {
     const errorName = 'EditorLite~handleInitialFileLoadAndRead';
+    List<String> lines = [];
     try {
       var contents = Fileloader.getFileContentsSync(filePath);
 
@@ -67,7 +67,6 @@ class _EditorLite extends State<EditorLite> {
 
     if (widget.filePath == null) {
       valueOnDisk = 'Hey there.\nWhatcha doing?';
-      lines = valueOnDisk.split('\n');
       document = Document(valueOnDisk);
     }
     else {
@@ -120,21 +119,20 @@ class _EditorLite extends State<EditorLite> {
     return true;
   }
 
-  void handleInsert (String key, KeyEvent event) {
-    NotifyingLine? nLine = document.lineAtIndex(cursorLine);
+  void handleInsert (String? key, KeyEvent event) {
     int updatedIndex = cursorIndex, updatedLine = cursorLine;
 
-    if (nLine == null) {
-      return;
+    if (key == null) {
+      if (event.logicalKey == LogicalKeyboardKey.enter) {
+        document.insertNewLine(cursorLine, cursorIndex);
+        updatedLine += 1;
+        updatedIndex = 0;
+      }
     }
-
-    if (event.logicalKey == LogicalKeyboardKey.enter) {
-      // TO-IMPL: create new line and hook up everything to it.
-      return;
+    else {
+      document.insertInLine(cursorLine, cursorIndex, key);
+      updatedIndex +=1;
     }
-
-    nLine.insert(cursorIndex, key);
-    updatedIndex +=1;
 
     updateCursorPosition(updatedLine, updatedIndex);
   }
@@ -173,7 +171,6 @@ class _EditorLite extends State<EditorLite> {
   }
 
   void handleArrowKeyPress (KeyEvent event) {
-    print(event.logicalKey);
     switch (event.logicalKey) {
       case LogicalKeyboardKey.arrowUp: {
         var updatedLine = cursorLine, updatedIndex = cursorIndex;
@@ -206,7 +203,7 @@ class _EditorLite extends State<EditorLite> {
 
         updatedLine++;
 
-        if (cursorLine == document.getLength() && currentLine != null) {
+        if (cursorLine == (document.getLength()-1) && currentLine != null) {
           updatedLine--; // reset from above
           updatedIndex = currentLine.pcStr.piecedValue.length;
         }
@@ -260,8 +257,17 @@ class _EditorLite extends State<EditorLite> {
     
     NotifyingLine nLine = document.lineAtIndex(lineIndex)!;
     int updatedLine = lineIndex, updatedIndex = cursorIndex;
+
+    // TextPainter specific logic:
+    // We are merging the default style with the text style because
+    // that is what the Line component does internally.
+    // Not doing this means that the TextPainter offset calculation
+    // fails in cases of non-default styles. Basically, other than the
+    // system default style, every other style will fail.
+    final defaultStyle = DefaultTextStyle.of(context).style;
+    final effectiveStyle = defaultStyle.merge(contentStyle);
     final painter = TextPainter(
-      text: TextSpan(text: nLine.pcStr.piecedValue, style: contentStyle),
+      text: TextSpan(text: nLine.pcStr.piecedValue, style: effectiveStyle),
       textDirection: TextDirection.ltr
     );
     Offset offset = Offset(details.localPosition.dx, 0);
@@ -284,48 +290,6 @@ class _EditorLite extends State<EditorLite> {
     );
   }
 
-  KeyEventResult handleKeyEvent (int lineIndex, FocusNode node, KeyEvent event) {
-    print(HardwareKeyboard.instance.logicalKeysPressed);
-      if (event is! KeyDownEvent || isShortcut()) {
-        return KeyEventResult.ignored;
-      }
-
-      String? key = event.character;
-      NotifyingLine? nLine = document.lineAtIndex(cursorLine);
-      int updatedIndex = cursorIndex, updatedLine = cursorLine;
-
-      if (nLine == null) {
-        return KeyEventResult.ignored;
-      }
-
-      if (event.logicalKey == LogicalKeyboardKey.backspace) {
-        nLine.delete(cursorIndex - 1, 1);
-        if (cursorIndex == 0) {
-          if (cursorLine != 0) {
-            updatedLine -= 1;
-          }
-        }
-        else {
-          updatedIndex -= 1;
-        }
-      }
-      else if (event.logicalKey == LogicalKeyboardKey.enter) {
-        // Add code here to somehow create a new line
-      } else if (key == null) {
-        return KeyEventResult.ignored;
-      } else {
-        nLine.insert(cursorIndex, key);
-        updatedIndex +=1;
-      }
-
-     setState(() {
-      cursorIndex = updatedIndex;
-      cursorLine = updatedLine;
-     });
-
-      return KeyEventResult.handled;
-  }
-
   @override
   Widget build(BuildContext context) {
     final widget = KeypressWidget(
@@ -334,45 +298,45 @@ class _EditorLite extends State<EditorLite> {
           height: double.infinity,
           color: Theme.of(context).colorScheme.inversePrimary,
           child: ListView.builder(
-            controller: _scrollController,
-            itemCount: document.getLength(),
-            itemBuilder: (context, i) {
-              var cPos = cursorLine == i ? cursorIndex : null;
-              NotifyingLine? currentLine = document.lineAtIndex(i);
+              controller: _scrollController,
+              itemCount: document.getLength(),
+              itemBuilder: (context, i) {
+                var cPos = cursorLine == i ? cursorIndex : null;
+                NotifyingLine? currentLine = document.lineAtIndex(i);
 
-              if (currentLine == null) {
-                return null;
-              }
+                if (currentLine == null) {
+                  return null;
+                }
 
-              return Row(children: [
-                Container(
-                  width: GUTTER_WIDTH,
-                  height: EDITOR_LINE_HEIGHT,
-                  color: cPos == null ? LINE_BACKGROUND : ACTIVE_LINE_BACKGROUND,
-                  alignment: Alignment.center,
-                  padding: EdgeInsets.symmetric(horizontal: 8.0),
-                  child: Text(
-                    (i+1).toString().padLeft(5),
-                    style: TextStyle(
-                      fontFeatures: [FontFeature.tabularFigures()],
-                      color: cPos == null ? LINE_NUMBER_TEXT_COLOR : ACTIVE_LINE_NUMBER_TEXT_COLOR,
-                      fontSize: FONT_SIZE
-                    ),
-                  )
-                ),
-                Expanded(
-                  child: GestureDetector(
-                    onTapDown: (TapDownDetails details) { handleTapDownEvent(i, details); },
-                    child: Line(
-                      text: lines[i],
-                      onKeyEvent: (FocusNode node, KeyEvent event) => handleKeyEventV2(i, node, event),
-                      nLine: currentLine,
-                      cursorIndex: cPos
+                return Row(children: [
+                  Container(
+                    width: GUTTER_WIDTH,
+                    height: EDITOR_LINE_HEIGHT,
+                    color: cPos == null ? LINE_BACKGROUND : ACTIVE_LINE_BACKGROUND,
+                    alignment: Alignment.center,
+                    padding: EdgeInsets.symmetric(horizontal: 8.0),
+                    child: Text(
+                      (i+1).toString().padLeft(5),
+                      style: TextStyle(
+                        fontFeatures: [FontFeature.tabularFigures()],
+                        color: cPos == null ? LINE_NUMBER_TEXT_COLOR : ACTIVE_LINE_NUMBER_TEXT_COLOR,
+                        fontSize: FONT_SIZE
+                      ),
+                    )
+                  ),
+                  Expanded(
+                    child: GestureDetector(
+                      onTapDown: (TapDownDetails details) { handleTapDownEvent(i, details); },
+                      child: Line(
+                        text: currentLine.pcStr.piecedValue,
+                        onKeyEvent: (FocusNode node, KeyEvent event) => handleKeyEventV2(i, node, event),
+                        nLine: currentLine,
+                        cursorIndex: cPos
+                      )
                     )
                   )
-                )
-              ]);
-            }
+                ]);
+              }
           )
       ),
     );

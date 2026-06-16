@@ -94,4 +94,10 @@ class Document {
     nLine.delete(position, len);
   }
 
+  void mergeLines (int startLineIndex, int endLineIndex) {
+    String mergedLine = _lines.sublist(startLineIndex, endLineIndex).map((l) => l.pcStr.piecedValue).join('');
+
+    _lines.replaceRange(startLineIndex, endLineIndex, [NotifyingLine(mergedLine)]);
+  }
+
 }

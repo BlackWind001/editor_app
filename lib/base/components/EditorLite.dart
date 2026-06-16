@@ -145,13 +145,24 @@ class _EditorLite extends State<EditorLite> {
       return;
     }
 
-    nLine.delete(cursorIndex - 1, 1);
     if (cursorIndex == 0) {
       if (cursorLine != 0) {
+        NotifyingLine? prevLine = document.lineAtIndex(cursorLine - 1);
+
+        if (prevLine == null) {
+          return;
+        }
+
+        document.mergeLines(cursorLine - 1, cursorLine + 1);
         updatedLine -= 1;
+        updatedIndex = prevLine.pcStr.piecedValue.length;
+      }
+      else {
+        return;
       }
     }
     else {
+      nLine.delete(cursorIndex - 1, 1);
       updatedIndex -= 1;
     }
 

@@ -2,6 +2,8 @@ import 'dart:developer';
 import 'dart:io';
 import 'package:editor_app/base/helpers/FileLoader.dart';
 import 'package:editor_app/base/helpers/inputEffectDelegator.dart';
+import 'package:editor_app/base/models/EditorSettings.dart';
+import 'package:editor_app/base/styles/editorStyles.dart';
 import 'package:editor_app/constants/editor.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -13,8 +15,6 @@ import 'package:editor_app/base/components/KeypressWidget.dart';
 // Models
 import 'package:editor_app/base/models/Document.dart';
 
-// Utils
-import 'package:editor_app/utils/isShortcut.dart';
 
 class EditorLite extends StatefulWidget {
 
@@ -170,7 +170,7 @@ class _EditorLite extends State<EditorLite> {
   }
 
   void handleShortcutPress (KeyEvent event) {
-
+    
   }
 
   void handleDeletePress (KeyEvent event) {
@@ -276,7 +276,7 @@ class _EditorLite extends State<EditorLite> {
     // fails in cases of non-default styles. Basically, other than the
     // system default style, every other style will fail.
     final defaultStyle = DefaultTextStyle.of(context).style;
-    final effectiveStyle = defaultStyle.merge(contentStyle);
+    final effectiveStyle = defaultStyle.merge(getContentStyle());
     final painter = TextPainter(
       text: TextSpan(text: nLine.pcStr.piecedValue, style: effectiveStyle),
       textDirection: TextDirection.ltr
@@ -308,46 +308,54 @@ class _EditorLite extends State<EditorLite> {
           width: double.infinity,
           height: double.infinity,
           color: Theme.of(context).colorScheme.inversePrimary,
-          child: ListView.builder(
-              controller: _scrollController,
-              itemCount: document.getLength(),
-              itemBuilder: (context, i) {
-                var cPos = cursorLine == i ? cursorIndex : null;
-                NotifyingLine? currentLine = document.lineAtIndex(i);
+          child: RawScrollbar(
+            controller: _scrollController,
+            thumbVisibility: true,
+            thumbColor: Colors.red,
+            thickness:8,
+            radius: const Radius.circular(8),
+            child: ListView.builder(
+                controller: _scrollController,
+                itemCount: document.getLength(),
+                itemBuilder: (context, i) {
+                  var cPos = cursorLine == i ? cursorIndex : null;
+                  NotifyingLine? currentLine = document.lineAtIndex(i);
 
-                if (currentLine == null) {
-                  return null;
-                }
+                  if (currentLine == null) {
+                    return null;
+                  }
 
-                return Row(children: [
-                  Container(
-                    width: GUTTER_WIDTH,
-                    height: EDITOR_LINE_HEIGHT,
-                    color: cPos == null ? LINE_BACKGROUND : ACTIVE_LINE_BACKGROUND,
-                    alignment: Alignment.center,
-                    padding: EdgeInsets.symmetric(horizontal: 8.0),
-                    child: Text(
-                      (i+1).toString().padLeft(5),
-                      style: TextStyle(
-                        fontFeatures: [FontFeature.tabularFigures()],
-                        color: cPos == null ? LINE_NUMBER_TEXT_COLOR : ACTIVE_LINE_NUMBER_TEXT_COLOR,
-                        fontSize: FONT_SIZE
-                      ),
-                    )
-                  ),
-                  Expanded(
-                    child: GestureDetector(
-                      onTapDown: (TapDownDetails details) { handleTapDownEvent(i, details); },
-                      child: Line(
-                        text: currentLine.pcStr.piecedValue,
-                        onKeyEvent: (FocusNode node, KeyEvent event) => handleKeyEventV2(i, node, event),
-                        nLine: currentLine,
-                        cursorIndex: cPos
+                  return Row(children: [
+                    Container(
+                      width: GUTTER_WIDTH,
+                      height: EDITOR_LINE_HEIGHT,
+                      color: cPos == null ? LINE_BACKGROUND : ACTIVE_LINE_BACKGROUND,
+                      alignment: Alignment.center,
+                      padding: EdgeInsets.symmetric(horizontal: 8.0),
+                      child: Text(
+                        (i+1).toString().padLeft(5),
+                        style: TextStyle(
+                          fontFeatures: [FontFeature.tabularFigures()],
+                          color: cPos == null ? LINE_NUMBER_TEXT_COLOR : ACTIVE_LINE_NUMBER_TEXT_COLOR,
+                          fontSize: edSettings.fontSize
+                        ),
+                      )
+                    ),
+                    Expanded(
+                      child: GestureDetector(
+                        onTapDown: (TapDownDetails details) { handleTapDownEvent(i, details); },
+                        child: Line(
+                          text: currentLine.pcStr.piecedValue,
+                          onKeyEvent: (FocusNode node, KeyEvent event) => handleKeyEventV2(i, node, event),
+                          nLine: currentLine,
+                          cursorIndex: cPos,
+                          contentStyle: getContentStyle(),
+                        )
                       )
                     )
-                  )
-                ]);
-              }
+                  ]);
+                }
+            )
           )
       ),
     );

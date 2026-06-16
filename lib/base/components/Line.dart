@@ -1,15 +1,10 @@
 import 'package:editor_app/base/components/Cursor.dart';
-import 'package:editor_app/base/data-structures/PiecableString.dart';
 import 'package:editor_app/base/models/Document.dart';
 import 'package:editor_app/constants/editor.dart';
 import 'package:flutter/material.dart';
 
 typedef LineKeyEventCallback =
     KeyEventResult Function(FocusNode node, KeyEvent event);
-TextStyle contentStyle = TextStyle(
-  color: PRIMARY_TEXT_COLOR,
-  fontSize: FONT_SIZE,
-);
 
 class Line extends StatefulWidget {
   const Line({
@@ -18,11 +13,13 @@ class Line extends StatefulWidget {
     required this.text,
     required this.onKeyEvent,
     required this.cursorIndex,
+    required this.contentStyle
   });
 
   final String text;
   final int? cursorIndex;
   final NotifyingLine nLine;
+  final TextStyle contentStyle;
   final LineKeyEventCallback onKeyEvent;
 
   @override
@@ -32,6 +29,7 @@ class Line extends StatefulWidget {
 class _Line extends State<Line> with SingleTickerProviderStateMixin {
   late NotifyingLine nLine;
   late int? cursorIndex;
+  late TextStyle contentStyle;
   final FocusNode _focusNode = FocusNode();
 
   void requestFocus() {
@@ -45,6 +43,7 @@ class _Line extends State<Line> with SingleTickerProviderStateMixin {
     super.initState();
     nLine = widget.nLine;
     cursorIndex = widget.cursorIndex;
+    contentStyle = widget.contentStyle;
     if (cursorIndex != null) {
       requestFocus();
     }
@@ -56,6 +55,7 @@ class _Line extends State<Line> with SingleTickerProviderStateMixin {
 
     cursorIndex = widget.cursorIndex;
     nLine = widget.nLine;
+    contentStyle = widget.contentStyle;
 
     if (oldWidget.cursorIndex == null && widget.cursorIndex != null) {
       /**

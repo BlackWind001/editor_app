@@ -15,10 +15,10 @@ class MyApp extends StatelessWidget {
       title: 'Flutter Demo',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        colorScheme: .fromSeed(seedColor: Colors.indigo),
+        colorScheme: .fromSeed(seedColor: Colors.indigo)
       ),
       home: Material(
-        textStyle: TextStyle(fontSize: 16, color: Colors.black),
+        textStyle: TextStyle(fontSize: 16, color: Colors.black, fontFamily: 'JetBrainsMono'),
         child: AppContainer(),
       )
     );
@@ -29,6 +29,6 @@ class AppContainer extends StatelessWidget {
   const AppContainer({super.key});
   @override
   Widget build(BuildContext context) {
-    return EditorLite(filePath: '/Users/anirudhms/Desktop/Projects/editor_app/lib/main.dart',);
+    return EditorLite(filePath: '/Users/anirudhms/Desktop/Projects/editor_app/lib/base/components/EditorLite.dart',);
   }
 }

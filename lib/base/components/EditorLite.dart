@@ -269,8 +269,6 @@ class _EditorLite extends State<EditorLite> {
     painter.layout();
     updatedIndex = painter.getPositionForOffset(offset).offset;
 
-    print('$updatedIndex');
-
     updateCursorPosition(updatedLine, updatedIndex);
   }
 
@@ -346,15 +344,34 @@ class _EditorLite extends State<EditorLite> {
                 return null;
               }
 
-              return GestureDetector(
-                onTapDown: (TapDownDetails details) { handleTapDownEvent(i, details); },
-                child: Line(
-                  text: lines[i],
-                  onKeyEvent: (FocusNode node, KeyEvent event) => handleKeyEventV2(i, node, event),
-                  nLine: currentLine,
-                  cursorIndex: cPos
+              return Row(children: [
+                Container(
+                  width: GUTTER_WIDTH,
+                  height: EDITOR_LINE_HEIGHT,
+                  color: cPos == null ? LINE_BACKGROUND : ACTIVE_LINE_BACKGROUND,
+                  alignment: Alignment.center,
+                  padding: EdgeInsets.symmetric(horizontal: 8.0),
+                  child: Text(
+                    (i+1).toString().padLeft(5),
+                    style: TextStyle(
+                      fontFeatures: [FontFeature.tabularFigures()],
+                      color: cPos == null ? LINE_NUMBER_TEXT_COLOR : ACTIVE_LINE_NUMBER_TEXT_COLOR,
+                      fontSize: FONT_SIZE
+                    ),
+                  )
+                ),
+                Expanded(
+                  child: GestureDetector(
+                    onTapDown: (TapDownDetails details) { handleTapDownEvent(i, details); },
+                    child: Line(
+                      text: lines[i],
+                      onKeyEvent: (FocusNode node, KeyEvent event) => handleKeyEventV2(i, node, event),
+                      nLine: currentLine,
+                      cursorIndex: cPos
+                    )
+                  )
                 )
-              );
+              ]);
             }
           )
       ),

@@ -8,7 +8,7 @@ typedef LineKeyEventCallback =
     KeyEventResult Function(FocusNode node, KeyEvent event);
 TextStyle contentStyle = TextStyle(
   color: PRIMARY_TEXT_COLOR,
-  fontSize: FONT_SIZE
+  fontSize: FONT_SIZE,
 );
 
 class Line extends StatefulWidget {
@@ -85,7 +85,6 @@ class _Line extends State<Line> with SingleTickerProviderStateMixin {
       },
       child: Container(
         height: EDITOR_LINE_HEIGHT,
-        width: double.infinity,
         color: cursorIndex == null ? LINE_BACKGROUND : ACTIVE_LINE_BACKGROUND,
         child: ListenableBuilder(
           listenable: nLine,

@@ -22,7 +22,11 @@ KeyEventResult inputEffectDelegator ({
   }
   else if (isShortcut()) {
     onShortcut(event);
-    return KeyEventResult.handled;
+
+    // ToDo: Return handled when we are actually handling shortcuts in the editor.
+    // For shortcuts we do not handle, remember to return KeyEventResult.ignored so
+    // that the parent can handle it if necessary.
+    return KeyEventResult.ignored;
   }
 
   switch (event.logicalKey) {

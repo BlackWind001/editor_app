@@ -1,4 +1,7 @@
+import 'dart:io';
+
 import 'package:editor_app/base/components/EditorLite.dart';
+import 'package:editor_app/mainAppShortcutsAndActions.dart';
 import 'package:flutter/material.dart';
 
 void main() {
@@ -25,13 +28,37 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class AppContainer extends StatelessWidget {
-  const AppContainer({super.key});
+class AppContainer extends StatefulWidget {
+  const AppContainer({ super.key });
+
+  @override
+  State<AppContainer> createState() => _AppContainer();
+}
+
+class _AppContainer extends State<AppContainer> {
+  late ShortcutsAndActionsMaps sAndAMaps;
+
+  void handleQuit(QuitIntent intent) {
+    exit(0);
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    sAndAMaps = getShortcutsAndActions(onQuit: handleQuit);
+  }
+
   @override
   Widget build(BuildContext context) {
-    return EditorLite(
-      // filePath: '/Users/anirudhms/Desktop/Projects/editor_app/lib/base/components/EditorLite.dart',
-      filePath: '/Users/anirudhms/Desktop/Projects/editor_app/lib/main.dart',
+    return Shortcuts(
+      shortcuts: sAndAMaps.shortcuts,
+      child: Actions(
+        actions: sAndAMaps.actions,
+        child: EditorLite(
+          // filePath: '/Users/anirudhms/Desktop/Projects/editor_app/lib/base/components/EditorLite.dart',
+          filePath: '/Users/anirudhms/Desktop/Projects/editor_app/lib/main.dart',
+        )
+      )
     );
   }
 }

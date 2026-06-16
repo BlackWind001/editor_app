@@ -86,31 +86,34 @@ class _Line extends State<Line> with SingleTickerProviderStateMixin {
       child: Container(
         height: EDITOR_LINE_HEIGHT,
         color: cursorIndex == null ? LINE_BACKGROUND : ACTIVE_LINE_BACKGROUND,
-        child: ListenableBuilder(
-          listenable: nLine,
-          builder: (BuildContext context, Widget? child) {
-            final cp = cursorIndex;
-
-            if (cp == null) {
-              return Row(
-                children: [Text(currentLineText, style: contentStyle)],
-              );
-            } else {
-              return Row(
-                children: [
-                  Text(
-                    currentLineText.substring(0, cp),
-                    style: contentStyle,
-                  ),
-                  if (_focusNode.hasFocus) Cursor(),
-                  Text(
-                    currentLineText.substring(cp),
-                    style: contentStyle,
-                  ),
-                ],
-              );
+        child: MouseRegion(
+          cursor: SystemMouseCursors.text,
+          child: ListenableBuilder(
+            listenable: nLine,
+            builder: (BuildContext context, Widget? child) {
+              final cp = cursorIndex;
+  
+              if (cp == null) {
+                return Row(
+                  children: [Text(currentLineText, style: contentStyle)],
+                );
+              } else {
+                return Row(
+                  children: [
+                    Text(
+                      currentLineText.substring(0, cp),
+                      style: contentStyle,
+                    ),
+                    if (_focusNode.hasFocus) Cursor(),
+                    Text(
+                      currentLineText.substring(cp),
+                      style: contentStyle,
+                    ),
+                  ],
+                );
+              }
             }
-          },
+          ),
         ),
       ),
     );

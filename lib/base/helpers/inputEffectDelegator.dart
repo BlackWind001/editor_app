@@ -16,7 +16,7 @@ KeyEventResult inputEffectDelegator ({
 }) {
   String? key = event.character;
 
-  if (event is! KeyDownEvent) {
+  if (event is! KeyDownEvent && event is! KeyRepeatEvent) {
     onNonKeyDownEvent(event);
     return KeyEventResult.ignored;
   }

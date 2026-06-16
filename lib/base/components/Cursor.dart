@@ -38,14 +38,16 @@ class _Cursor extends State<Cursor> with SingleTickerProviderStateMixin {
     if (_showCursor) {
       return Container(
         width: 2,
-        height: 16,
-        color: Colors.amber
+        height: double.infinity,
+        color: Colors.amber,
+        margin: EdgeInsets.symmetric(vertical: 4.0),
       );
     }
     return Container(
         width: 2,
-        height: 16,
-        color: Colors.transparent
+        height: double.infinity,
+        color: Colors.transparent,
+        margin: EdgeInsets.symmetric(vertical: 4.0),
       );
     
   }

@@ -1,9 +1,6 @@
 import 'dart:io';
-
+import 'package:editor_app/constants/shortcuts.dart';
 import 'package:flutter/services.dart';
-
-
-const QUIT = 'quit';
 
 class ShortcutCombo {
   final LogicalKeyboardKey key;
@@ -18,11 +15,15 @@ class ShortcutCombo {
  
 
 var linuxShortcuts = <String, ShortcutCombo>{
-  QUIT: ShortcutCombo(key: LogicalKeyboardKey.f4, control: true)
+  SHORTCUT_QUIT: ShortcutCombo(key: LogicalKeyboardKey.f4, control: true),
+  SHORTCUT_ZOOM_IN: ShortcutCombo(key: LogicalKeyboardKey.equal, control: true),
+  SHORTCUT_ZOOM_OUT: ShortcutCombo(key: LogicalKeyboardKey.minus, control: true),
 };
 
 var macShortcuts = <String, ShortcutCombo>{
-  QUIT: ShortcutCombo(key: LogicalKeyboardKey.keyQ, meta: true)
+  SHORTCUT_QUIT: ShortcutCombo(key: LogicalKeyboardKey.keyQ, meta: true),
+  SHORTCUT_ZOOM_IN: ShortcutCombo(key: LogicalKeyboardKey.equal, meta: true),
+  SHORTCUT_ZOOM_OUT: ShortcutCombo(key: LogicalKeyboardKey.minus, meta: true),
 };
 
 class Platformspecificshortcuts {

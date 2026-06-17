@@ -84,7 +84,6 @@ class _Line extends State<Line> with SingleTickerProviderStateMixin {
         return widget.onKeyEvent(node, event);
       },
       child: Container(
-        height: EDITOR_LINE_HEIGHT,
         color: cursorIndex == null ? LINE_BACKGROUND : ACTIVE_LINE_BACKGROUND,
         child: MouseRegion(
           cursor: SystemMouseCursors.text,
@@ -92,26 +91,30 @@ class _Line extends State<Line> with SingleTickerProviderStateMixin {
             listenable: nLine,
             builder: (BuildContext context, Widget? child) {
               final cp = cursorIndex;
-  
-              if (cp == null) {
-                return Row(
-                  children: [Text(currentLineText, style: contentStyle)],
-                );
-              } else {
-                return Row(
-                  children: [
-                    Text(
-                      currentLineText.substring(0, cp),
-                      style: contentStyle,
-                    ),
-                    if (_focusNode.hasFocus) Cursor(),
-                    Text(
-                      currentLineText.substring(cp),
-                      style: contentStyle,
-                    ),
-                  ],
-                );
-              }
+
+              return IntrinsicHeight(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: (() {
+                    if (cp == null) {
+                      return [Text(currentLineText, style: contentStyle)];
+                    }
+                    else {
+                      return [
+                        Text(
+                          currentLineText.substring(0, cp),
+                          style: contentStyle,
+                        ),
+                        if (_focusNode.hasFocus) Cursor(),
+                        Text(
+                          currentLineText.substring(cp),
+                          style: contentStyle,
+                        ),
+                      ];
+                    }
+                  })(),
+                )
+              );
             }
           ),
         ),

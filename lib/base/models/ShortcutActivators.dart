@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 class ShortcutActivators {
-  SingleActivator quitActivator = SingleActivator(LogicalKeyboardKey.keyQ, meta: true);
+
   var activators = <String, SingleActivator>{};
 
   void initialize () {

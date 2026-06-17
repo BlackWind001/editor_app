@@ -1,7 +1,8 @@
 import 'dart:io';
 
 import 'package:editor_app/base/components/EditorLite.dart';
-import 'package:editor_app/mainAppShortcutsAndActions.dart';
+import 'package:editor_app/base/helpers/ShortcutsAndActionMaps.dart';
+import 'package:editor_app/base/helpers/mainAppShortcutsAndActions.dart';
 import 'package:flutter/material.dart';
 
 void main() {
@@ -45,7 +46,7 @@ class _AppContainer extends State<AppContainer> {
   @override
   void initState() {
     super.initState();
-    sAndAMaps = getShortcutsAndActions(onQuit: handleQuit);
+    sAndAMaps = getMainAppShortcutsAndActions(onQuit: handleQuit);
   }
 
   @override

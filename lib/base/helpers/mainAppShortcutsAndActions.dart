@@ -1,19 +1,19 @@
+import 'package:editor_app/base/helpers/ShortcutsAndActionMaps.dart';
 import 'package:editor_app/base/models/ShortcutActivators.dart';
+import 'package:editor_app/constants/shortcuts.dart';
 import 'package:flutter/material.dart';
+
+typedef DefaultMainAppActionCallback<T extends Intent> = void Function(T intent);
 
 class QuitIntent extends Intent {
   const QuitIntent();
 }
 
-typedef IntentToActionMap = Map<Type, Action<Intent>>;
-typedef DefaultMainAppActionCallback<T extends Intent> = void Function(T intent);
-typedef ActivatorToIntentMap = Map<ShortcutActivator, Intent>;
-
 ActivatorToIntentMap getMainAppShortcuts() {
   ActivatorToIntentMap map = {};
   shortcutActivators.initialize();
 
-  map[shortcutActivators.quitActivator] = QuitIntent();
+  map[shortcutActivators.activators[SHORTCUT_QUIT]!] = QuitIntent();
 
   return map;
 }
@@ -29,12 +29,8 @@ IntentToActionMap getMainAppActions({
   };
 }
 
-class ShortcutsAndActionsMaps {
-  ActivatorToIntentMap shortcuts = {};
-  IntentToActionMap actions = {};
-}
 
-ShortcutsAndActionsMaps getShortcutsAndActions({
+ShortcutsAndActionsMaps getMainAppShortcutsAndActions({
   required DefaultMainAppActionCallback<QuitIntent> onQuit
 }) {
   ShortcutsAndActionsMaps res = ShortcutsAndActionsMaps();

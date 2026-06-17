@@ -1,6 +1,8 @@
 import 'dart:developer';
 import 'dart:io';
 import 'package:editor_app/base/helpers/FileLoader.dart';
+import 'package:editor_app/base/helpers/ShortcutsAndActionMaps.dart';
+import 'package:editor_app/base/helpers/editorShortcutsAndActions.dart';
 import 'package:editor_app/base/helpers/inputEffectDelegator.dart';
 import 'package:editor_app/base/models/EditorSettings.dart';
 import 'package:editor_app/base/styles/editorStyles.dart';
@@ -32,6 +34,7 @@ class _EditorLite extends State<EditorLite> {
   int cursorIndex = 0;
   final ScrollController _scrollController = ScrollController();
   late Document document;
+  late ShortcutsAndActionsMaps sAndAMaps;
 
 
   void handleInitialFileLoadAndRead (String filePath) {
@@ -72,6 +75,8 @@ class _EditorLite extends State<EditorLite> {
     else {
       handleInitialFileLoadAndRead(widget.filePath!);
     }
+
+    sAndAMaps = getEditorShortcutsAndActions(onZoomIn: handleZoomIn, onZoomOut: handleZoomOut);
   }
 
   @override
@@ -171,6 +176,16 @@ class _EditorLite extends State<EditorLite> {
 
   void handleShortcutPress (KeyEvent event) {
     
+  }
+
+  void handleZoomIn (ZoomInIntent intent) {
+    print('Zooming in');
+    edSettings.setFontSize(edSettings.fontSize + 0.5);
+    setState(() {});
+  }
+  void handleZoomOut (ZoomOutIntent intent) {
+    edSettings.setFontSize(edSettings.fontSize - 0.5);
+    setState(() {});
   }
 
   void handleDeletePress (KeyEvent event) {
@@ -303,11 +318,11 @@ class _EditorLite extends State<EditorLite> {
 
   @override
   Widget build(BuildContext context) {
-    final widget = KeypressWidget(
+    final mainWidget = KeypressWidget(
       child: Container(
           width: double.infinity,
           height: double.infinity,
-          color: Theme.of(context).colorScheme.inversePrimary,
+          color: LINE_BACKGROUND,
           child: RawScrollbar(
             controller: _scrollController,
             thumbVisibility: true,
@@ -325,49 +340,60 @@ class _EditorLite extends State<EditorLite> {
                     return null;
                   }
 
-                  return Row(children: [
-                    Container(
-                      width: GUTTER_WIDTH,
-                      height: EDITOR_LINE_HEIGHT,
-                      color: cPos == null ? LINE_BACKGROUND : ACTIVE_LINE_BACKGROUND,
-                      alignment: Alignment.center,
-                      padding: EdgeInsets.symmetric(horizontal: 8.0),
-                      child: Text(
-                        (i+1).toString().padLeft(5),
-                        style: TextStyle(
-                          fontFeatures: [FontFeature.tabularFigures()],
-                          color: cPos == null ? LINE_NUMBER_TEXT_COLOR : ACTIVE_LINE_NUMBER_TEXT_COLOR,
-                          fontSize: edSettings.fontSize
+                  return IntrinsicHeight(
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Container(
+                          width: GUTTER_WIDTH,
+                          color: cPos == null ? LINE_BACKGROUND : ACTIVE_LINE_BACKGROUND,
+                          alignment: Alignment.center,
+                          padding: EdgeInsets.symmetric(horizontal: 8.0),
+                          child: Text(
+                            (i+1).toString().padLeft(5),
+                            style: TextStyle(
+                              fontFeatures: [FontFeature.tabularFigures()],
+                              color: cPos == null ? LINE_NUMBER_TEXT_COLOR : ACTIVE_LINE_NUMBER_TEXT_COLOR,
+                              fontSize: edSettings.fontSize
+                            ),
+                          )
                         ),
-                      )
-                    ),
-                    Expanded(
-                      child: GestureDetector(
-                        onTapDown: (TapDownDetails details) { handleTapDownEvent(i, details); },
-                        child: Line(
-                          text: currentLine.pcStr.piecedValue,
-                          onKeyEvent: (FocusNode node, KeyEvent event) => handleKeyEventV2(i, node, event),
-                          nLine: currentLine,
-                          cursorIndex: cPos,
-                          contentStyle: getContentStyle(),
+                        Expanded(
+                          child: GestureDetector(
+                            onTapDown: (TapDownDetails details) { handleTapDownEvent(i, details); },
+                            child: Line(
+                              text: currentLine.pcStr.piecedValue,
+                              onKeyEvent: (FocusNode node, KeyEvent event) => handleKeyEventV2(i, node, event),
+                              nLine: currentLine,
+                              cursorIndex: cPos,
+                              contentStyle: getContentStyle(),
+                            )
+                          )
                         )
-                      )
-                    )
-                  ]);
+                      ]
+                    ),
+                  );
                 }
             )
           )
-      ),
+        ),
+      );
+    final widget = Shortcuts(
+      shortcuts: sAndAMaps.shortcuts,
+      child: Actions(
+        actions: sAndAMaps.actions,
+        child: mainWidget
+      )
     );
 
     // ToDo: Move the following lines to a separate registerShortcuts function
     // along with other app wide shortcut registrations.
     // Also, only register the necessary platform's shortcuts.
-    widget.register(
+    mainWidget.register(
       const KeyPress(key: LogicalKeyboardKey.keyQ, meta: true),
       () => exit(0),
     );
-    widget.register(
+    mainWidget.register(
       const KeyPress(key: LogicalKeyboardKey.f4, alt: true),
       () => exit(0),
     );

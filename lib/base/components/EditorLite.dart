@@ -17,6 +17,7 @@ import 'package:editor_app/base/components/KeypressWidget.dart';
 // Models
 import 'package:editor_app/base/models/Document.dart';
 
+const DEFAULT_GUTTER_PADDING = 8.0;
 
 class EditorLite extends StatefulWidget {
 
@@ -35,6 +36,7 @@ class _EditorLite extends State<EditorLite> {
   final ScrollController _scrollController = ScrollController();
   late Document document;
   late ShortcutsAndActionsMaps sAndAMaps;
+  double lineNumberGutterWidth = GUTTER_WIDTH;
 
 
   void handleInitialFileLoadAndRead (String filePath) {
@@ -80,6 +82,12 @@ class _EditorLite extends State<EditorLite> {
   }
 
   @override
+  void didChangeDependencies () {
+    super.didChangeDependencies();
+    lineNumberGutterWidth = getLineNumberGutterWidth();
+  }
+
+  @override
   void dispose () {
     _scrollController.dispose();
     super.dispose();
@@ -110,8 +118,9 @@ class _EditorLite extends State<EditorLite> {
       // Check if the current line is within the viewport
       var viewportHeight = _scrollController.position.viewportDimension;
       var offset = _scrollController.offset;
-      var lineTop = EDITOR_LINE_HEIGHT * (updatedLine);
-      var lineBottom = EDITOR_LINE_HEIGHT * (updatedLine + 1);
+      double lineHeight = (edSettings.fontSize * edSettings.lineHeightMultiplier);
+      var lineTop = lineHeight * (updatedLine);
+      var lineBottom = lineHeight * (updatedLine + 1);
 
       if (lineTop < offset) {
         _scrollController.jumpTo(lineTop);
@@ -175,17 +184,43 @@ class _EditorLite extends State<EditorLite> {
   }
 
   void handleShortcutPress (KeyEvent event) {
-    
+
+  }
+
+  /// This function calculates the total width the line gutter is supposed to take
+  /// at different zoom levels. I tried having a constant gutter width of 64px.
+  /// But the moment the content cannot fit inside this constant width (at high zoom levles), the
+  /// line number texts ended up breaking. So, I have this function which scales the
+  /// gutter width as well.
+  double getLineNumberGutterWidth () {
+    final defaultStyle = DefaultTextStyle.of(context).style;
+    final lineNumberPainter = TextPainter(
+      text: TextSpan(
+        text: "99999",style: defaultStyle.merge(getContentStyle())
+      ),
+      textDirection: TextDirection.ltr
+    );
+    double res;
+
+    lineNumberPainter.layout();
+    res = lineNumberPainter.width;
+    lineNumberPainter.dispose();
+
+    // Magic number 16.0 because 
+    return res + 2*DEFAULT_GUTTER_PADDING;
   }
 
   void handleZoomIn (ZoomInIntent intent) {
-    print('Zooming in');
-    edSettings.setFontSize(edSettings.fontSize + 0.5);
-    setState(() {});
+    edSettings.setFontSize(edSettings.fontSize + 1);
+    setState(() {
+      lineNumberGutterWidth = getLineNumberGutterWidth();
+    });
   }
   void handleZoomOut (ZoomOutIntent intent) {
-    edSettings.setFontSize(edSettings.fontSize - 0.5);
-    setState(() {});
+    edSettings.setFontSize(edSettings.fontSize - 1);
+    setState(() {
+      lineNumberGutterWidth = getLineNumberGutterWidth();
+    });
   }
 
   void handleDeletePress (KeyEvent event) {
@@ -301,6 +336,8 @@ class _EditorLite extends State<EditorLite> {
     painter.layout();
     updatedIndex = painter.getPositionForOffset(offset).offset;
 
+    painter.dispose();
+
     updateCursorPosition(updatedLine, updatedIndex);
   }
 
@@ -318,7 +355,7 @@ class _EditorLite extends State<EditorLite> {
 
   @override
   Widget build(BuildContext context) {
-    final mainWidget = KeypressWidget(
+    final widget = KeypressWidget(
       child: Container(
           width: double.infinity,
           height: double.infinity,
@@ -345,14 +382,14 @@ class _EditorLite extends State<EditorLite> {
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         Container(
-                          width: GUTTER_WIDTH,
+                          height: edSettings.lineHeightMultiplier * edSettings.fontSize,
+                          width: lineNumberGutterWidth,
                           color: cPos == null ? LINE_BACKGROUND : ACTIVE_LINE_BACKGROUND,
                           alignment: Alignment.center,
-                          padding: EdgeInsets.symmetric(horizontal: 8.0),
+                          padding: EdgeInsets.symmetric(horizontal: DEFAULT_GUTTER_PADDING),
                           child: Text(
-                            (i+1).toString().padLeft(5),
+                            (i+1).toString(),
                             style: TextStyle(
-                              fontFeatures: [FontFeature.tabularFigures()],
                               color: cPos == null ? LINE_NUMBER_TEXT_COLOR : ACTIVE_LINE_NUMBER_TEXT_COLOR,
                               fontSize: edSettings.fontSize
                             ),
@@ -378,26 +415,26 @@ class _EditorLite extends State<EditorLite> {
           )
         ),
       );
-    final widget = Shortcuts(
+    final wrappedWidget = Shortcuts(
       shortcuts: sAndAMaps.shortcuts,
       child: Actions(
         actions: sAndAMaps.actions,
-        child: mainWidget
+        child: widget
       )
     );
 
     // ToDo: Move the following lines to a separate registerShortcuts function
     // along with other app wide shortcut registrations.
     // Also, only register the necessary platform's shortcuts.
-    mainWidget.register(
+    widget.register(
       const KeyPress(key: LogicalKeyboardKey.keyQ, meta: true),
       () => exit(0),
     );
-    mainWidget.register(
+    widget.register(
       const KeyPress(key: LogicalKeyboardKey.f4, alt: true),
       () => exit(0),
     );
 
-    return widget;
+    return wrappedWidget;
   }
 }

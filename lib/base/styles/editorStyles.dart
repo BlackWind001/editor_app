@@ -10,5 +10,6 @@ TextStyle getContentStyle () {
   return TextStyle(
     color: PRIMARY_TEXT_COLOR,
     fontSize: edSettings.fontSize,
+    height: edSettings.lineHeightMultiplier,
   );
 } 

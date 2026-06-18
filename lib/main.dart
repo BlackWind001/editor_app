@@ -56,8 +56,8 @@ class _AppContainer extends State<AppContainer> {
       child: Actions(
         actions: sAndAMaps.actions,
         child: EditorLite(
-          // filePath: '/Users/anirudhms/Desktop/Projects/editor_app/lib/base/components/EditorLite.dart',
-          filePath: '/Users/anirudhms/Desktop/Projects/editor_app/lib/main.dart',
+          filePath: '/Users/anirudhms/Desktop/Projects/editor_app/lib/base/components/EditorLite.dart',
+          // filePath: '/Users/anirudhms/Desktop/Projects/editor_app/lib/main.dart',
         )
       )
     );

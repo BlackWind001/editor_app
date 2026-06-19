@@ -22,6 +22,7 @@ class NotifyingLine with ChangeNotifier {
 
 class Document {
   List<NotifyingLine> _lines = [];
+  int _longestLineIndex = 0;
 
   Document(String initial) {
     if (initial.isEmpty) {
@@ -29,12 +30,7 @@ class Document {
       return;
     }
 
-    _lines = initial
-      .split('\n')
-      .map(
-        (el) => 
-          NotifyingLine(el)
-        ).toList();
+    load(initial.split('\n'));
   }
 
   Document.fromLines(List<String> initialLines) {
@@ -43,9 +39,26 @@ class Document {
       return;
     }
 
-    _lines = initialLines.map(
-      (el) => NotifyingLine(el)
-    ).toList();
+    load(initialLines);
+  }
+
+  void load(List<String> initial) {
+    int index = 0;
+    int initialLongestLineLength = 0;
+    _lines = initial
+      .map((el) {
+        if (el.length > initialLongestLineLength) {
+          _longestLineIndex = index;
+          initialLongestLineLength = el.length;
+        }
+
+        index++;
+        return NotifyingLine(el);
+      }).toList();
+  }
+
+  int get longestLineIndex {
+    return _longestLineIndex;
   }
 
   NotifyingLine? lineAtIndex (int lineIndex) {
@@ -57,6 +70,18 @@ class Document {
 
   int getLength () {
     return _lines.length;
+  }
+
+  int _calculateLongestLineIndex () {
+    int currentLongestLineLength = 0;
+    int result = 0;
+    for(int i = 0; i < _lines.length; i++) {
+      if (_lines[i].pcStr.piecedValue.length > currentLongestLineLength) {
+        result = i;
+      }
+    }
+
+    return result;
   }
 
   void insertNewLine (int lineIndex, int position) {
@@ -73,16 +98,31 @@ class Document {
     newlyAddedLines.add(line.substring(position));
     
     _lines.replaceRange(lineIndex, lineIndex + 1, newlyAddedLines.map((el) => NotifyingLine(el)));
+
+    if (lineIndex == _longestLineIndex) {
+      _longestLineIndex = _calculateLongestLineIndex();
+    }
+    else if (lineIndex < _longestLineIndex) {
+      _longestLineIndex++;
+    }
   }
 
   void insertInLine(int lineIndex, int position, Piece toInsert) {
 
     NotifyingLine? nLine = lineAtIndex(lineIndex);
+    NotifyingLine? longestLine = _lines[longestLineIndex];
+    int newLength;
 
     if (nLine == null) {
       return;
     }
     nLine.insert(position, toInsert);
+
+    newLength = nLine.pcStr.piecedValue.length;
+  
+    if (newLength > longestLine.pcStr.piecedValue.length) {
+      _longestLineIndex = lineIndex;
+    }
   }
 
   void deleteFromLine(int lineIndex, int position, int len) {
@@ -92,12 +132,22 @@ class Document {
       return;
     }
     nLine.delete(position, len);
+
+    if (lineIndex == _longestLineIndex) {
+      // Recompute longest line length.
+      _longestLineIndex = _calculateLongestLineIndex();
+    }
   }
 
   void mergeLines (int startLineIndex, int endLineIndex) {
     String mergedLine = _lines.sublist(startLineIndex, endLineIndex).map((l) => l.pcStr.piecedValue).join('');
+    NotifyingLine? longestLine = _lines[longestLineIndex];
 
     _lines.replaceRange(startLineIndex, endLineIndex, [NotifyingLine(mergedLine)]);
+
+    if (mergedLine.length > longestLine.pcStr.piecedValue.length) {
+      _longestLineIndex = startLineIndex;
+    }
   }
 
 }

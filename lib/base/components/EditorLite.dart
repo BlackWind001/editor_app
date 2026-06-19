@@ -33,10 +33,13 @@ class _EditorLite extends State<EditorLite> {
   String valueOnDisk = '';
   int cursorLine = 0;
   int cursorIndex = 0;
-  final ScrollController _scrollController = ScrollController();
+  final ScrollController _vLineScrollController = ScrollController();
+  final ScrollController _vGutterScrollController = ScrollController();
+  final ScrollController _hScrollController = ScrollController();
   late Document document;
   late ShortcutsAndActionsMaps sAndAMaps;
   double lineNumberGutterWidth = GUTTER_WIDTH;
+  double longestLineWidth = 0.0;
 
 
   void handleInitialFileLoadAndRead (String filePath) {
@@ -79,20 +82,62 @@ class _EditorLite extends State<EditorLite> {
     }
 
     sAndAMaps = getEditorShortcutsAndActions(onZoomIn: handleZoomIn, onZoomOut: handleZoomOut);
+    setupLineGutterSynchronousScroll();
   }
 
   @override
   void didChangeDependencies () {
     super.didChangeDependencies();
     lineNumberGutterWidth = getLineNumberGutterWidth();
+    updateLongestLineWidth();
   }
 
   @override
   void dispose () {
-    _scrollController.dispose();
+    _vLineScrollController.dispose();
+    _vGutterScrollController.dispose();
+    _hScrollController.dispose();
     super.dispose();
   }
 
+  void setupLineGutterSynchronousScroll () {
+    _vLineScrollController.addListener(() {
+      if (_vLineScrollController.position.isScrollingNotifier.value) {
+        _vGutterScrollController.jumpTo(_vLineScrollController.offset);
+      }
+    });
+
+    _vGutterScrollController.addListener(() {
+      if (_vGutterScrollController.position.isScrollingNotifier.value) {
+        _vLineScrollController.jumpTo(_vGutterScrollController.offset);
+      }
+    });
+  }
+
+  void updateLongestLineWidth () {
+    final defaultStyle = DefaultTextStyle.of(context).style;
+    final nLine = document.lineAtIndex(document.longestLineIndex);
+
+    if (nLine == null) {
+      return;
+    }
+
+    final lineNumberPainter = TextPainter(
+      text: TextSpan(
+        text: nLine.pcStr.piecedValue,style: defaultStyle.merge(getContentStyle())
+      ),
+      textDirection: TextDirection.ltr
+    );
+    double res;
+
+    lineNumberPainter.layout();
+    res = lineNumberPainter.width;
+    lineNumberPainter.dispose();
+
+    setState(() {
+      longestLineWidth = res;
+    });
+  }
   bool updateCursorPosition (int updatedLine, int updatedIndex,{bool skipScroll = false}) {
 
     var currentLine = document.lineAtIndex(updatedLine);
@@ -114,19 +159,19 @@ class _EditorLite extends State<EditorLite> {
       cursorIndex = updatedIndex;
     });
 
-    if (_scrollController.hasClients) {
+    if (_vLineScrollController.hasClients) {
       // Check if the current line is within the viewport
-      var viewportHeight = _scrollController.position.viewportDimension;
-      var offset = _scrollController.offset;
+      var viewportHeight = _vLineScrollController.position.viewportDimension;
+      var offset = _vLineScrollController.offset;
       double lineHeight = (edSettings.fontSize * edSettings.lineHeightMultiplier);
       var lineTop = lineHeight * (updatedLine);
       var lineBottom = lineHeight * (updatedLine + 1);
 
       if (lineTop < offset) {
-        _scrollController.jumpTo(lineTop);
+        _vLineScrollController.jumpTo(lineTop);
       }
       else if (lineBottom >= (offset + viewportHeight)) {
-        _scrollController.jumpTo(lineBottom - viewportHeight);
+        _vLineScrollController.jumpTo(lineBottom - viewportHeight);
       }
     }
 
@@ -149,6 +194,7 @@ class _EditorLite extends State<EditorLite> {
     }
 
     updateCursorPosition(updatedLine, updatedIndex);
+    updateLongestLineWidth();
   }
 
   void handleBackspacePress (KeyEvent event) {
@@ -181,6 +227,7 @@ class _EditorLite extends State<EditorLite> {
     }
 
     updateCursorPosition(updatedLine, updatedIndex);
+    updateLongestLineWidth();
   }
 
   void handleShortcutPress (KeyEvent event) {
@@ -215,12 +262,14 @@ class _EditorLite extends State<EditorLite> {
     setState(() {
       lineNumberGutterWidth = getLineNumberGutterWidth();
     });
+    updateLongestLineWidth();
   }
   void handleZoomOut (ZoomOutIntent intent) {
     edSettings.setFontSize(edSettings.fontSize - 1);
     setState(() {
       lineNumberGutterWidth = getLineNumberGutterWidth();
     });
+    updateLongestLineWidth();
   }
 
   void handleDeletePress (KeyEvent event) {
@@ -355,84 +404,90 @@ class _EditorLite extends State<EditorLite> {
 
   @override
   Widget build(BuildContext context) {
-    final widget = KeypressWidget(
-      child: Container(
-          width: double.infinity,
-          height: double.infinity,
-          color: LINE_BACKGROUND,
-          child: RawScrollbar(
-            controller: _scrollController,
-            thumbVisibility: true,
-            thumbColor: Colors.red,
-            thickness:8,
-            radius: const Radius.circular(8),
-            child: ListView.builder(
-                controller: _scrollController,
+    double lineHeight = edSettings.lineHeightMultiplier * edSettings.fontSize;
+    final gutter = ListView.builder(
+      controller: _vGutterScrollController,
+      itemCount: document.getLength(),
+      itemBuilder: (context, i) {
+      var cPos = cursorLine == i ? cursorIndex : null;
+      return Container(
+        height: lineHeight,
+        color: cPos == null ? LINE_BACKGROUND : ACTIVE_LINE_BACKGROUND,
+        alignment: Alignment.center,
+        padding: EdgeInsets.symmetric(horizontal: DEFAULT_GUTTER_PADDING),
+        child: Text(
+          (i+1).toString(),
+          style: TextStyle(
+            color: cPos == null ? LINE_NUMBER_TEXT_COLOR : ACTIVE_LINE_NUMBER_TEXT_COLOR,
+            fontSize: edSettings.fontSize
+          ),
+        )
+      );
+    });
+    final linesList = RawScrollbar(
+      controller: _hScrollController,
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        controller: _hScrollController,
+        child: RawScrollbar(
+          controller: _vLineScrollController,
+          child: Row(children: [
+            SizedBox(
+              width: longestLineWidth,
+              child: ListView.builder(
+                controller: _vLineScrollController,
                 itemCount: document.getLength(),
                 itemBuilder: (context, i) {
-                  var cPos = cursorLine == i ? cursorIndex : null;
-                  NotifyingLine? currentLine = document.lineAtIndex(i);
+                var cPos = cursorLine == i ? cursorIndex : null;
+                NotifyingLine? currentLine = document.lineAtIndex(i);
 
-                  if (currentLine == null) {
-                    return null;
-                  }
-
-                  return IntrinsicHeight(
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Container(
-                          height: edSettings.lineHeightMultiplier * edSettings.fontSize,
-                          width: lineNumberGutterWidth,
-                          color: cPos == null ? LINE_BACKGROUND : ACTIVE_LINE_BACKGROUND,
-                          alignment: Alignment.center,
-                          padding: EdgeInsets.symmetric(horizontal: DEFAULT_GUTTER_PADDING),
-                          child: Text(
-                            (i+1).toString(),
-                            style: TextStyle(
-                              color: cPos == null ? LINE_NUMBER_TEXT_COLOR : ACTIVE_LINE_NUMBER_TEXT_COLOR,
-                              fontSize: edSettings.fontSize
-                            ),
-                          )
-                        ),
-                        Expanded(
-                          child: GestureDetector(
-                            onTapDown: (TapDownDetails details) { handleTapDownEvent(i, details); },
-                            child: Line(
-                              text: currentLine.pcStr.piecedValue,
-                              onKeyEvent: (FocusNode node, KeyEvent event) => handleKeyEventV2(i, node, event),
-                              nLine: currentLine,
-                              cursorIndex: cPos,
-                              contentStyle: getContentStyle(),
-                            )
-                          )
-                        )
-                      ]
-                    ),
-                  );
+                if (currentLine == null) {
+                  return null;
                 }
-            )
+
+                return Container(
+                  height: lineHeight,
+                  width: lineNumberGutterWidth,
+                  child: GestureDetector(
+                    onTapDown: (TapDownDetails details) { handleTapDownEvent(i, details); },
+                    child: Line(
+                      text: currentLine.pcStr.piecedValue,
+                      onKeyEvent: (FocusNode node, KeyEvent event) => handleKeyEventV2(i, node, event),
+                      nLine: currentLine,
+                      cursorIndex: cPos,
+                      contentStyle: getContentStyle(),
+                    )
+                  )
+                );
+              })
+              )
+          ],)
+        )
+      )
+    );
+    final viewWidget = Container(
+      width: double.infinity,
+      height: double.infinity,
+      color: LINE_BACKGROUND,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: lineNumberGutterWidth,
+            child: gutter
+          ),
+          Expanded(
+            child: linesList
           )
-        ),
-      );
+        ]
+      ),
+    );
     final wrappedWidget = Shortcuts(
       shortcuts: sAndAMaps.shortcuts,
       child: Actions(
         actions: sAndAMaps.actions,
-        child: widget
+        child: viewWidget
       )
-    );
-
-    // ToDo: Move the following lines to a separate registerShortcuts function
-    // along with other app wide shortcut registrations.
-    // Also, only register the necessary platform's shortcuts.
-    widget.register(
-      const KeyPress(key: LogicalKeyboardKey.keyQ, meta: true),
-      () => exit(0),
-    );
-    widget.register(
-      const KeyPress(key: LogicalKeyboardKey.f4, alt: true),
-      () => exit(0),
     );
 
     return wrappedWidget;

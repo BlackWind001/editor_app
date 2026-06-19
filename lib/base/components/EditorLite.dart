@@ -1,5 +1,6 @@
 import 'dart:developer';
 import 'dart:io';
+import 'dart:math' as math;
 import 'package:editor_app/base/helpers/FileLoader.dart';
 import 'package:editor_app/base/helpers/ShortcutsAndActionMaps.dart';
 import 'package:editor_app/base/helpers/editorShortcutsAndActions.dart';
@@ -16,6 +17,7 @@ import 'package:editor_app/base/components/KeypressWidget.dart';
 
 // Models
 import 'package:editor_app/base/models/Document.dart';
+import 'package:linked_scroll_controller/linked_scroll_controller.dart';
 
 const DEFAULT_GUTTER_PADDING = 8.0;
 
@@ -33,8 +35,9 @@ class _EditorLite extends State<EditorLite> {
   String valueOnDisk = '';
   int cursorLine = 0;
   int cursorIndex = 0;
-  final ScrollController _vLineScrollController = ScrollController();
-  final ScrollController _vGutterScrollController = ScrollController();
+  late ScrollController _vLineScrollController = ScrollController();
+  late ScrollController _vGutterScrollController = ScrollController();
+  final LinkedScrollControllerGroup scrollControllerGroup = LinkedScrollControllerGroup();
   final ScrollController _hScrollController = ScrollController();
   late Document document;
   late ShortcutsAndActionsMaps sAndAMaps;
@@ -82,7 +85,8 @@ class _EditorLite extends State<EditorLite> {
     }
 
     sAndAMaps = getEditorShortcutsAndActions(onZoomIn: handleZoomIn, onZoomOut: handleZoomOut);
-    setupLineGutterSynchronousScroll();
+    _vLineScrollController = scrollControllerGroup.addAndGet();
+    _vGutterScrollController = scrollControllerGroup.addAndGet();
   }
 
   @override
@@ -98,20 +102,6 @@ class _EditorLite extends State<EditorLite> {
     _vGutterScrollController.dispose();
     _hScrollController.dispose();
     super.dispose();
-  }
-
-  void setupLineGutterSynchronousScroll () {
-    _vLineScrollController.addListener(() {
-      if (_vLineScrollController.position.isScrollingNotifier.value) {
-        _vGutterScrollController.jumpTo(_vLineScrollController.offset);
-      }
-    });
-
-    _vGutterScrollController.addListener(() {
-      if (_vGutterScrollController.position.isScrollingNotifier.value) {
-        _vLineScrollController.jumpTo(_vGutterScrollController.offset);
-      }
-    });
   }
 
   void updateLongestLineWidth () {
@@ -426,43 +416,47 @@ class _EditorLite extends State<EditorLite> {
     });
     final linesList = RawScrollbar(
       controller: _hScrollController,
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        controller: _hScrollController,
-        child: RawScrollbar(
-          controller: _vLineScrollController,
-          child: Row(children: [
-            SizedBox(
-              width: longestLineWidth,
-              child: ListView.builder(
-                controller: _vLineScrollController,
-                itemCount: document.getLength(),
-                itemBuilder: (context, i) {
-                var cPos = cursorLine == i ? cursorIndex : null;
-                NotifyingLine? currentLine = document.lineAtIndex(i);
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          return SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            controller: _hScrollController,
+            child: RawScrollbar(
+              controller: _vLineScrollController,
+              child: Row(children: [
+                SizedBox(
+                  width: math.max(longestLineWidth, constraints.maxWidth),
+                  child: ListView.builder(
+                    controller: _vLineScrollController,
+                    itemCount: document.getLength(),
+                    itemBuilder: (context, i) {
+                    var cPos = cursorLine == i ? cursorIndex : null;
+                    NotifyingLine? currentLine = document.lineAtIndex(i);
 
-                if (currentLine == null) {
-                  return null;
-                }
+                    if (currentLine == null) {
+                      return null;
+                    }
 
-                return Container(
-                  height: lineHeight,
-                  width: lineNumberGutterWidth,
-                  child: GestureDetector(
-                    onTapDown: (TapDownDetails details) { handleTapDownEvent(i, details); },
-                    child: Line(
-                      text: currentLine.pcStr.piecedValue,
-                      onKeyEvent: (FocusNode node, KeyEvent event) => handleKeyEventV2(i, node, event),
-                      nLine: currentLine,
-                      cursorIndex: cPos,
-                      contentStyle: getContentStyle(),
-                    )
+                    return Container(
+                      height: lineHeight,
+                      width: lineNumberGutterWidth,
+                      child: GestureDetector(
+                        onTapDown: (TapDownDetails details) { handleTapDownEvent(i, details); },
+                        child: Line(
+                          text: currentLine.pcStr.piecedValue,
+                          onKeyEvent: (FocusNode node, KeyEvent event) => handleKeyEventV2(i, node, event),
+                          nLine: currentLine,
+                          cursorIndex: cPos,
+                          contentStyle: getContentStyle(),
+                        )
+                      )
+                    );
+                  })
                   )
-                );
-              })
-              )
-          ],)
-        )
+              ],)
+            )
+          );
+        },
       )
     );
     final viewWidget = Container(

@@ -75,6 +75,7 @@ class _EditorContainer extends State<EditorContainer> {
         // NOTE: The following line closes the file since we are
         // only showing one editor at a time. In multi-tab mode,
         // this needs to be removed.
+        // This needs to go in dispose ideally.
         onCloseFile(oldFilePath);
       }
       if (filePath != null) {

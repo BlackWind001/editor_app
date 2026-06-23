@@ -19,6 +19,8 @@ var linuxShortcuts = <String, ShortcutCombo>{
   SHORTCUT_ZOOM_IN: ShortcutCombo(key: LogicalKeyboardKey.equal, control: true),
   SHORTCUT_ZOOM_OUT: ShortcutCombo(key: LogicalKeyboardKey.minus, control: true),
   SHORTCUT_SAVE: ShortcutCombo(key: LogicalKeyboardKey.keyS, control: true),
+  SHORTCUT_OPEN_WORKSPACE: ShortcutCombo(key: LogicalKeyboardKey.keyO, control: true, shift: true),
+  SHORTCUT_OPEN_FILE: ShortcutCombo(key: LogicalKeyboardKey.keyO, control: true)
 };
 
 var macShortcuts = <String, ShortcutCombo>{
@@ -26,6 +28,8 @@ var macShortcuts = <String, ShortcutCombo>{
   SHORTCUT_ZOOM_IN: ShortcutCombo(key: LogicalKeyboardKey.equal, meta: true),
   SHORTCUT_ZOOM_OUT: ShortcutCombo(key: LogicalKeyboardKey.minus, meta: true),
   SHORTCUT_SAVE: ShortcutCombo(key: LogicalKeyboardKey.keyS, meta: true),
+  SHORTCUT_OPEN_WORKSPACE: ShortcutCombo(key: LogicalKeyboardKey.keyO, meta: true, shift: true),
+  SHORTCUT_OPEN_FILE: ShortcutCombo(key: LogicalKeyboardKey.keyO, meta: true)
 };
 
 class Platformspecificshortcuts {

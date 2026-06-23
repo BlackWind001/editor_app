@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:editor_app/base/components/EditorLite.dart';
 import 'package:editor_app/base/models/Document.dart';
 import 'package:editor_app/constants/editor.dart';
+import 'package:editor_app/types/Callbacks.dart';
 import 'package:flutter/widgets.dart';
 
 enum READY_STATE {
@@ -16,8 +17,9 @@ enum READY_STATE {
 class EditorContainer extends StatefulWidget{
 
   String? filePath;
+  CloseFileCallback? onCloseFile;
 
-  EditorContainer({ super.key, this.filePath });
+  EditorContainer({ super.key, this.filePath, this.onCloseFile });
 
   @override
   State<EditorContainer> createState() => _EditorContainer();
@@ -56,6 +58,28 @@ class _EditorContainer extends State<EditorContainer> {
     }
     finally {
       setState(() {});
+    }
+  }
+
+  @override
+  void didUpdateWidget (oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    String? oldFilePath = oldWidget.filePath;
+    String? filePath = widget.filePath;
+    CloseFileCallback? onCloseFile = widget.onCloseFile;
+
+    if (oldFilePath != filePath) {
+      if (onCloseFile != null && oldFilePath != null) {
+
+        // NOTE: The following line closes the file since we are
+        // only showing one editor at a time. In multi-tab mode,
+        // this needs to be removed.
+        onCloseFile(oldFilePath);
+      }
+      if (filePath != null) {
+        handleInitialFileLoadAndRead(filePath);
+      }
     }
   }
 

@@ -1,6 +1,5 @@
 import 'package:editor_app/base/models/PlatformSpecificShortcuts.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 class ShortcutActivators {
 

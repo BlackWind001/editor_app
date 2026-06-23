@@ -1,0 +1,1 @@
+typedef CloseFileCallback = Future<void> Function(String filePath);

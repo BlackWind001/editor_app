@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:editor_app/base/components/EditorLite.dart';
+import 'package:editor_app/base/components/Workspace.dart';
 import 'package:editor_app/base/helpers/ShortcutsAndActionMaps.dart';
 import 'package:editor_app/base/helpers/mainAppShortcutsAndActions.dart';
 import 'package:flutter/material.dart';
@@ -55,10 +56,7 @@ class _AppContainer extends State<AppContainer> {
       shortcuts: sAndAMaps.shortcuts,
       child: Actions(
         actions: sAndAMaps.actions,
-        child: EditorLite(
-          filePath: '/Users/anirudhms/Desktop/Projects/editor_app/lib/base/components/EditorLite.dart',
-          // filePath: '/Users/anirudhms/Desktop/Projects/editor_app/lib/main.dart',
-        )
+        child: Workspace()
       )
     );
   }

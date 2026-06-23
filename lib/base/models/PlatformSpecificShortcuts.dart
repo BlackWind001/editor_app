@@ -18,12 +18,14 @@ var linuxShortcuts = <String, ShortcutCombo>{
   SHORTCUT_QUIT: ShortcutCombo(key: LogicalKeyboardKey.f4, control: true),
   SHORTCUT_ZOOM_IN: ShortcutCombo(key: LogicalKeyboardKey.equal, control: true),
   SHORTCUT_ZOOM_OUT: ShortcutCombo(key: LogicalKeyboardKey.minus, control: true),
+  SHORTCUT_SAVE: ShortcutCombo(key: LogicalKeyboardKey.keyS, control: true),
 };
 
 var macShortcuts = <String, ShortcutCombo>{
   SHORTCUT_QUIT: ShortcutCombo(key: LogicalKeyboardKey.keyQ, meta: true),
   SHORTCUT_ZOOM_IN: ShortcutCombo(key: LogicalKeyboardKey.equal, meta: true),
   SHORTCUT_ZOOM_OUT: ShortcutCombo(key: LogicalKeyboardKey.minus, meta: true),
+  SHORTCUT_SAVE: ShortcutCombo(key: LogicalKeyboardKey.keyS, meta: true),
 };
 
 class Platformspecificshortcuts {

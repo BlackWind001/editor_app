@@ -12,12 +12,17 @@ class ZoomOutIntent extends Intent {
   const ZoomOutIntent();
 }
 
+class SaveIntent extends Intent {
+  const SaveIntent();
+}
+
 ActivatorToIntentMap getEditorShortcuts() {
   ActivatorToIntentMap map = {};
   shortcutActivators.initialize();
 
   map[shortcutActivators.activators[SHORTCUT_ZOOM_IN]!] = ZoomInIntent();
   map[shortcutActivators.activators[SHORTCUT_ZOOM_OUT]!] = ZoomOutIntent();
+  map[shortcutActivators.activators[SHORTCUT_SAVE]!] = SaveIntent();
 
   return map;
 }
@@ -25,7 +30,8 @@ ActivatorToIntentMap getEditorShortcuts() {
 
 IntentToActionMap getEditorActions({
   required DefaultEditorActionCallback<ZoomInIntent> onZoomIn,
-  required DefaultEditorActionCallback<ZoomOutIntent> onZoomOut
+  required DefaultEditorActionCallback<ZoomOutIntent> onZoomOut,
+  required DefaultEditorActionCallback<SaveIntent> onSave
 }) {
   return {
     ZoomInIntent: CallbackAction<ZoomInIntent>(onInvoke: (ZoomInIntent intent) {
@@ -33,6 +39,9 @@ IntentToActionMap getEditorActions({
     }),
     ZoomOutIntent: CallbackAction<ZoomOutIntent>(onInvoke: (ZoomOutIntent intent) {
       onZoomOut(intent);
+    }),
+    SaveIntent: CallbackAction<SaveIntent>(onInvoke: (SaveIntent intent) {
+      onSave(intent);
     })
   };
 }
@@ -40,14 +49,19 @@ IntentToActionMap getEditorActions({
 
 ShortcutsAndActionsMaps getEditorShortcutsAndActions({
   required DefaultEditorActionCallback<ZoomInIntent> onZoomIn,
-  required DefaultEditorActionCallback<ZoomOutIntent> onZoomOut
+  required DefaultEditorActionCallback<ZoomOutIntent> onZoomOut,
+  required DefaultEditorActionCallback<SaveIntent> onSave
 }) {
   ShortcutsAndActionsMaps res = ShortcutsAndActionsMaps();
 
   shortcutActivators.initialize();
 
   res.shortcuts = getEditorShortcuts();
-  res.actions = getEditorActions(onZoomIn: onZoomIn, onZoomOut: onZoomOut);
+  res.actions = getEditorActions(
+    onZoomIn: onZoomIn,
+    onZoomOut: onZoomOut,
+    onSave: onSave
+  );
 
   return res;
 }

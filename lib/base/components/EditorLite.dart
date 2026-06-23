@@ -1,19 +1,17 @@
 import 'dart:developer';
-import 'dart:io';
 import 'dart:math' as math;
-import 'package:editor_app/base/helpers/FileLoader.dart';
 import 'package:editor_app/base/helpers/ShortcutsAndActionMaps.dart';
 import 'package:editor_app/base/helpers/editorShortcutsAndActions.dart';
 import 'package:editor_app/base/helpers/inputEffectDelegator.dart';
 import 'package:editor_app/base/models/EditorSettings.dart';
 import 'package:editor_app/base/styles/editorStyles.dart';
 import 'package:editor_app/constants/editor.dart';
+import 'package:editor_app/types/OpResult.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 // Components
 import 'package:editor_app/base/components/Line.dart';
-import 'package:editor_app/base/components/KeypressWidget.dart';
 
 // Models
 import 'package:editor_app/base/models/Document.dart';
@@ -23,9 +21,9 @@ const DEFAULT_GUTTER_PADDING = 8.0;
 
 class EditorLite extends StatefulWidget {
 
-  const EditorLite({ super.key, this.filePath });
+  const EditorLite({ super.key, required this.document });
 
-  final String? filePath;
+  final Document document;
 
   @override
   State<EditorLite> createState() => _EditorLite();
@@ -44,47 +42,12 @@ class _EditorLite extends State<EditorLite> {
   double lineNumberGutterWidth = GUTTER_WIDTH;
   double longestLineWidth = 0.0;
 
-
-  void handleInitialFileLoadAndRead (String filePath) {
-    const errorName = 'EditorLite~handleInitialFileLoadAndRead';
-    List<String> lines = [];
-    try {
-      var contents = Fileloader.getFileContentsSync(filePath);
-
-      lines = contents;
-      valueOnDisk = contents.join('\n');
-    } on FileSystemException catch (fileSysException, trace) {
-      log(
-        'Error occurred while loading file: $filePath.',
-        name: errorName,
-        error: fileSysException,
-        stackTrace: trace
-      );
-    } catch (e, trace) {
-      log(
-        'Encountered error',
-        name: errorName,
-        error: e,
-        stackTrace: trace
-      );
-    } finally {
-      document = Document.fromLines(lines);
-    }
-  }
-
   @override
   void initState() {
     super.initState();
 
-    if (widget.filePath == null) {
-      valueOnDisk = 'Hey there.\nWhatcha doing?';
-      document = Document(valueOnDisk);
-    }
-    else {
-      handleInitialFileLoadAndRead(widget.filePath!);
-    }
-
-    sAndAMaps = getEditorShortcutsAndActions(onZoomIn: handleZoomIn, onZoomOut: handleZoomOut);
+    document = widget.document;
+    sAndAMaps = getEditorShortcutsAndActions(onZoomIn: handleZoomIn, onZoomOut: handleZoomOut, onSave: handleSave);
     _vLineScrollController = scrollControllerGroup.addAndGet();
     _vGutterScrollController = scrollControllerGroup.addAndGet();
   }
@@ -94,6 +57,15 @@ class _EditorLite extends State<EditorLite> {
     super.didChangeDependencies();
     lineNumberGutterWidth = getLineNumberGutterWidth();
     updateLongestLineWidth();
+  }
+
+  @override
+  void didUpdateWidget(covariant EditorLite oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    if (oldWidget.document != document) {
+      print('didUpdateWidget: NOT IMPLEMENTED');
+    }
   }
 
   @override
@@ -262,6 +234,14 @@ class _EditorLite extends State<EditorLite> {
     updateLongestLineWidth();
   }
 
+  void handleSave (SaveIntent intent) async {
+    OpResult res = await document.save();
+
+    if (!res.success) {
+      print('File could not be saved.');
+      // ToDo: Implement popup that file could not be saved.
+    }
+  }
   void handleDeletePress (KeyEvent event) {
     
   }
@@ -402,7 +382,7 @@ class _EditorLite extends State<EditorLite> {
       var cPos = cursorLine == i ? cursorIndex : null;
       return Container(
         height: lineHeight,
-        color: cPos == null ? LINE_BACKGROUND : ACTIVE_LINE_BACKGROUND,
+        color: cPos == null ? null : ACTIVE_LINE_BACKGROUND,
         alignment: Alignment.center,
         padding: EdgeInsets.symmetric(horizontal: DEFAULT_GUTTER_PADDING),
         child: Text(
@@ -440,6 +420,7 @@ class _EditorLite extends State<EditorLite> {
                     return Container(
                       height: lineHeight,
                       width: lineNumberGutterWidth,
+                      color: EDITOR_BACKGROUND,
                       child: GestureDetector(
                         onTapDown: (TapDownDetails details) { handleTapDownEvent(i, details); },
                         child: Line(
@@ -462,7 +443,7 @@ class _EditorLite extends State<EditorLite> {
     final viewWidget = Container(
       width: double.infinity,
       height: double.infinity,
-      color: LINE_BACKGROUND,
+      color: EDITOR_BACKGROUND,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.start,
         children: [

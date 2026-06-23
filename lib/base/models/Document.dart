@@ -1,4 +1,9 @@
+import 'dart:developer';
+import 'dart:io';
+
 import 'package:editor_app/base/data-structures/PiecableString.dart';
+import 'package:editor_app/base/helpers/FileActions.dart';
+import 'package:editor_app/types/OpResult.dart';
 import 'package:flutter/widgets.dart';
 
 class NotifyingLine with ChangeNotifier {
@@ -21,6 +26,7 @@ class NotifyingLine with ChangeNotifier {
 }
 
 class Document {
+  File? _file;
   List<NotifyingLine> _lines = [];
   int _longestLineIndex = 0;
 
@@ -30,8 +36,10 @@ class Document {
       return;
     }
 
-    load(initial.split('\n'));
+    _load(initial.split('\n'));
   }
+
+  Document._ ();
 
   Document.fromLines(List<String> initialLines) {
     if (initialLines.isEmpty) {
@@ -39,10 +47,34 @@ class Document {
       return;
     }
 
-    load(initialLines);
+    _load(initialLines);
   }
 
-  void load(List<String> initial) {
+  /// Factory method since we need to perform asynchronous operation
+  static Future<Document> createFromPath(String path) async {
+    Document instance = Document._();
+
+    await instance._intializeFromPath(path);
+
+    return instance;
+  }
+
+  Future<void> _intializeFromPath (String path) async {
+    File? f = await FileActions.getFileIfExists(path);
+    String name = 'Document.initializeFromPath';
+
+    if (f == null) {
+      log('Unable to _load file path $path', name: name);
+      throw('Unable to _load file path $path');
+    }
+
+    List<String> contents = await f.readAsLines();
+    _load(contents);
+
+    _file = f;
+  }
+
+  void _load(List<String> initial) {
     int index = 0;
     int initialLongestLineLength = 0;
     _lines = initial
@@ -55,6 +87,17 @@ class Document {
         index++;
         return NotifyingLine(el);
       }).toList();
+  }
+
+  Future<OpResult> save () async {
+    if (_file == null) {
+      return OpResult(
+        success: false,
+      errMsg: 'Document._file is null'
+      );
+    }
+
+    return FileActions.saveFile(_file!, _linesAsString);
   }
 
   int get longestLineIndex {
@@ -82,6 +125,10 @@ class Document {
     }
 
     return result;
+  }
+
+  String get _linesAsString {
+    return _lines.map((el) { return el.pcStr.piecedValue; }).join('\n');
   }
 
   void insertNewLine (int lineIndex, int position) {

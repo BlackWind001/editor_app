@@ -84,7 +84,7 @@ class _Line extends State<Line> with SingleTickerProviderStateMixin {
         return widget.onKeyEvent(node, event);
       },
       child: Container(
-        color: cursorIndex == null ? LINE_BACKGROUND : ACTIVE_LINE_BACKGROUND,
+        color: cursorIndex == null ? null : ACTIVE_LINE_BACKGROUND,
         child: MouseRegion(
           cursor: SystemMouseCursors.text,
           child: ListenableBuilder(

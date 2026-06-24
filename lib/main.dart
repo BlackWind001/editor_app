@@ -1,6 +1,4 @@
 import 'dart:io';
-
-import 'package:editor_app/base/components/EditorLite.dart';
 import 'package:editor_app/base/components/Workspace.dart';
 import 'package:editor_app/base/helpers/ShortcutsAndActionMaps.dart';
 import 'package:editor_app/base/helpers/mainAppShortcutsAndActions.dart';

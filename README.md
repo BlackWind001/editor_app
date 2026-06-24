@@ -1,19 +1,18 @@
 # editor_app
 
-A new Flutter project.
+A text editor built from scratch using Flutter.
 
-## Getting Started
+## Features available
+1. Basic keyboard interactions
+2. Virtualization (with cross axis scroll calculation)
+3. Keyboard shortcuts (top level shortcuts registered with support for more)
+4. Cursor placement and animations
+5. Zooming.
+6. Line numbers
 
-This project is a starting point for a Flutter application.
+## Next set of features being built
 
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+Please look at the TODOs folder in the repo for the next set of action items.
 
 ## Running the project
 
@@ -22,3 +21,5 @@ Run using
 ```
 flutter run -d mac
 ```
+
+## Demo

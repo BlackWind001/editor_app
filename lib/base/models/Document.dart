@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:editor_app/base/data-structures/PiecableString.dart';
 import 'package:editor_app/base/helpers/FileActions.dart';
+import 'package:editor_app/base/models/DirectoryWatchers.dart';
 import 'package:editor_app/types/OpResult.dart';
 import 'package:flutter/widgets.dart';
 
@@ -27,8 +28,11 @@ class NotifyingLine with ChangeNotifier {
 
 class Document {
   File? _file;
+  DateTime? _lastWrittenTimestamp;
   List<NotifyingLine> _lines = [];
   int _longestLineIndex = 0;
+  bool hasFileBeenModifiedExternally = false;
+  bool hasUnsavedChanges = false;
 
   Document(String initial) {
     if (initial.isEmpty) {
@@ -72,6 +76,38 @@ class Document {
     _load(contents);
 
     _file = f;
+    await DirectoryWatchers.registerListenerForFile(path, handleDirectoryEvents);
+  }
+
+  void handleDirectoryEvents (FileSystemEvent event) async {
+    File? f = _file;
+    String name = 'Document~handleDirectoryEvents';
+    if (f == null) {
+      log('File is null but the directory events are firing.', name: name);
+      return;
+    }
+    if (event.path != f.path) {
+      return;
+    }
+
+    switch (event) {
+      case FileSystemDeleteEvent(): {
+        log('Delete event fired for ${f.path}', name: name);
+        hasFileBeenModifiedExternally = true;
+        return;
+      }
+      case FileSystemModifyEvent(): {
+        final lastModifiedTimestamp = await f.lastModified();
+        if (lastModifiedTimestamp == _lastWrittenTimestamp) {
+          // The change was by us so the file has not been externally modified.
+          return;
+        }
+        log('File has been modified ${f.path}', name: name);
+        hasFileBeenModifiedExternally = true;
+        return;
+      }
+      default: {}
+    }
   }
 
   void _load(List<String> initial) {
@@ -90,6 +126,7 @@ class Document {
   }
 
   Future<OpResult> save () async {
+    OpResult res = OpResult(success: true);
     if (_file == null) {
       return OpResult(
         success: false,
@@ -97,7 +134,21 @@ class Document {
       );
     }
 
-    return FileActions.saveFile(_file!, _linesAsString);
+    if (hasFileBeenModifiedExternally) {
+      return OpResult(success: false, errMsg: 'File has been modified externally');
+    }
+
+    res = await FileActions.saveFile(_file!, _linesAsString);
+
+    if (res.success) {
+      hasUnsavedChanges = false;
+      _lastWrittenTimestamp = await _file!.lastModified();
+    }
+    else {
+      hasUnsavedChanges = true;
+    }
+
+    return res;
   }
 
   int get longestLineIndex {
@@ -152,6 +203,8 @@ class Document {
     else if (lineIndex < _longestLineIndex) {
       _longestLineIndex++;
     }
+
+    hasUnsavedChanges = true;
   }
 
   void insertInLine(int lineIndex, int position, Piece toInsert) {
@@ -170,6 +223,7 @@ class Document {
     if (newLength > longestLine.pcStr.piecedValue.length) {
       _longestLineIndex = lineIndex;
     }
+    hasUnsavedChanges = true;
   }
 
   void deleteFromLine(int lineIndex, int position, int len) {
@@ -184,6 +238,7 @@ class Document {
       // Recompute longest line length.
       _longestLineIndex = _calculateLongestLineIndex();
     }
+    hasUnsavedChanges = true;
   }
 
   void mergeLines (int startLineIndex, int endLineIndex) {
@@ -195,6 +250,17 @@ class Document {
     if (mergedLine.length > longestLine.pcStr.piecedValue.length) {
       _longestLineIndex = startLineIndex;
     }
+    hasUnsavedChanges = true;
+  }
+
+  void cleanup () {
+    File? f = _file;
+
+    if (f == null) {
+      return;
+    }
+
+    DirectoryWatchers.unregisterListenerForFile(f.path);
   }
 
 }

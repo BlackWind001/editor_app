@@ -29,7 +29,6 @@ class _EditorContainer extends State<EditorContainer> {
   Document document = Document('\n');
   READY_STATE state = READY_STATE.UNINITIALIZED;
 
-
   Future<void> handleInitialFileLoadAndRead (String filePath) async {
     state = READY_STATE.LOADING;
 
@@ -62,6 +61,12 @@ class _EditorContainer extends State<EditorContainer> {
   }
 
   @override
+  void dispose () {
+    document.cleanup();
+    super.dispose();
+  }
+
+  @override
   void didUpdateWidget (oldWidget) {
     super.didUpdateWidget(oldWidget);
 
@@ -76,7 +81,10 @@ class _EditorContainer extends State<EditorContainer> {
         // only showing one editor at a time. In multi-tab mode,
         // this needs to be removed.
         // This needs to go in dispose ideally.
+        // This line allows the parent to clean up.
         onCloseFile(oldFilePath);
+        // This line allows the document and its listeners to be cleaned up
+        document.cleanup();
       }
       if (filePath != null) {
         handleInitialFileLoadAndRead(filePath);

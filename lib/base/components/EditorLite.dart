@@ -236,9 +236,10 @@ class _EditorLite extends State<EditorLite> {
 
   void handleSave (SaveIntent intent) async {
     OpResult res = await document.save();
+    String name = 'EditorLite~handleSave';
 
     if (!res.success) {
-      print('File could not be saved.');
+      log('File could not be saved. ${res.errMsg}', name: name);
       // ToDo: Implement popup that file could not be saved.
     }
   }

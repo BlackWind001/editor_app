@@ -172,6 +172,7 @@ class Document {
     for(int i = 0; i < _lines.length; i++) {
       if (_lines[i].pcStr.piecedValue.length > currentLongestLineLength) {
         result = i;
+        currentLongestLineLength = _lines[i].pcStr.piecedValue.length;
       }
     }
 

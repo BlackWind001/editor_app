@@ -1,4 +1,5 @@
 import 'dart:developer';
+import 'dart:io';
 import 'dart:math' as math;
 import 'package:editor_app/base/helpers/ShortcutsAndActionMaps.dart';
 import 'package:editor_app/base/helpers/editorShortcutsAndActions.dart';
@@ -7,6 +8,7 @@ import 'package:editor_app/base/models/EditorSettings.dart';
 import 'package:editor_app/base/styles/editorStyles.dart';
 import 'package:editor_app/constants/editor.dart';
 import 'package:editor_app/types/OpResult.dart';
+import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -235,8 +237,22 @@ class _EditorLite extends State<EditorLite> {
   }
 
   void handleSave (SaveIntent intent) async {
-    OpResult res = await document.save();
+    OpResult res;
     String name = 'EditorLite~handleSave';
+    if (!document.isAttachedToFile) {
+      final FileSaveLocation? location = await getSaveLocation(
+        suggestedName: 'untitled'
+      );
+
+      if (location == null) {
+        log('User has cancelled file save', name: name);
+        return;
+      }
+      res = await document.create(File(location.path));
+    }
+    else {
+      res = await document.save();
+    }
 
     if (!res.success) {
       log('File could not be saved. ${res.errMsg}', name: name);

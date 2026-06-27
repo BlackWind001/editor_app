@@ -24,6 +24,12 @@ class FileActions {
     return await f.readAsLines();
   }
 
+  static Future<OpResult> _save (File f, String contents) async {
+    await f.writeAsString(contents, flush: true);
+
+    return OpResult(success: true);
+  }
+
   static Future<OpResult> saveFile (File f, String contents) async {
     bool exists = await f.exists();
 
@@ -31,8 +37,10 @@ class FileActions {
       return OpResult(success: false, errMsg: 'File does not exist');
     }
 
-    f.writeAsString(contents, flush: true);
+    return _save(f, contents);
+  }
 
-    return OpResult(success: true);
+  static Future<OpResult> createFile (File f, String contents) async {
+    return _save(f, contents);
   }
 }

@@ -125,6 +125,19 @@ class Document {
       }).toList();
   }
 
+  Future<OpResult> create (File f) async {
+    OpResult res = await FileActions.createFile(f, _linesAsString);
+
+    if (res.success) {
+
+      // This currently sort of restarts the instance's file details.
+      // _initializeFromPath internally calls _load which current does NOT
+      // reset all values. So, this might become a source of bugs later on.
+      _intializeFromPath(f.path);
+    }
+
+    return res;
+  }
   Future<OpResult> save () async {
     OpResult res = OpResult(success: true);
     if (_file == null) {
@@ -153,6 +166,10 @@ class Document {
 
   int get longestLineIndex {
     return _longestLineIndex;
+  }
+
+  bool get isAttachedToFile {
+    return _file != null;
   }
 
   NotifyingLine? lineAtIndex (int lineIndex) {

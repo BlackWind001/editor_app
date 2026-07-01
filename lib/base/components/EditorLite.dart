@@ -7,7 +7,9 @@ import 'package:editor_app/base/helpers/inputEffectDelegator.dart';
 import 'package:editor_app/base/models/EditorSettings.dart';
 import 'package:editor_app/base/styles/editorStyles.dart';
 import 'package:editor_app/constants/editor.dart';
+import 'package:editor_app/types/CursorPos.dart';
 import 'package:editor_app/types/OpResult.dart';
+import 'package:editor_app/utils/wordActions.dart';
 import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -32,7 +34,6 @@ class EditorLite extends StatefulWidget {
 }
 
 class _EditorLite extends State<EditorLite> {
-  String valueOnDisk = '';
   int cursorLine = 0;
   int cursorIndex = 0;
   late ScrollController _vLineScrollController = ScrollController();
@@ -49,7 +50,15 @@ class _EditorLite extends State<EditorLite> {
     super.initState();
 
     document = widget.document;
-    sAndAMaps = getEditorShortcutsAndActions(onZoomIn: handleZoomIn, onZoomOut: handleZoomOut, onSave: handleSave);
+    sAndAMaps = getEditorShortcutsAndActions(
+      onZoomIn: handleZoomIn,
+      onZoomOut: handleZoomOut,
+      onSave: handleSave,
+      onWordEnd: handleGoToWordEnd,
+      onWordStart: handleGoToWordStart,
+      onLineEnd: handleLineEnd,
+      onLineStart: handleLineStart
+    );
     _vLineScrollController = scrollControllerGroup.addAndGet();
     _vGutterScrollController = scrollControllerGroup.addAndGet();
   }
@@ -375,6 +384,51 @@ class _EditorLite extends State<EditorLite> {
     painter.dispose();
 
     updateCursorPosition(updatedLine, updatedIndex);
+  }
+
+  void handleGoToWordEnd (WordEndIntent intent) {
+    CursorPos newPos = getNextWordStart(originalCursorIndex: cursorIndex, originalLineIndex: cursorLine, document: document);
+    setState(() {
+      cursorIndex = newPos.index;
+      cursorLine = newPos.line;
+    });
+  }
+  void handleGoToWordStart (WordStartIntent intent) {
+    CursorPos newPos = getPreviousWordStart(originalCursorIndex: cursorIndex, originalLineIndex: cursorLine, document: document);
+    setState(() {
+      cursorIndex = newPos.index;
+      cursorLine = newPos.line;
+    });
+  }
+  void handleLineEnd (LineEndIntent intent) {
+    String? currentLine = document.lineAtIndex(cursorLine)?.pcStr.piecedValue;
+    String name = 'EditorLite~handleLineEnd';
+    String msg;
+
+    if (currentLine == null) {
+      msg = "Current line is null. This shouldn't happen";
+      log(msg, name: name);
+      throw('$name:$msg');
+    }
+
+    updateCursorPosition(cursorLine, currentLine.length);
+  }
+  void handleLineStart (LineStartIntent intent) {
+    String? currentLine = document.lineAtIndex(cursorLine)?.pcStr.piecedValue;
+    String name = 'EditorLite~handleLineStart';
+    String msg;
+
+    if (currentLine == null) {
+      msg = "Current line is null. This shouldn't happen";
+      log(msg, name: name);
+      throw('$name:$msg');
+    }
+
+    final newPos = getFirstWordOrOtherBoundaryStart(originalCursorIndex: cursorIndex, originalLineIndex: cursorLine, document: document);
+    setState(() {
+      cursorIndex = newPos.index;
+      cursorLine = newPos.line;
+    });
   }
 
   KeyEventResult handleKeyEventV2 (int lineIndex, FocusNode node, KeyEvent event) {

@@ -4,3 +4,7 @@ const SHORTCUT_ZOOM_OUT = 'zoomOut';
 const SHORTCUT_SAVE = 'save';
 const SHORTCUT_OPEN_WORKSPACE = 'openWorkspace';
 const SHORTCUT_OPEN_FILE = 'openFile';
+const SHORTCUT_WORD_END = 'wordEnd';
+const SHORTCUT_WORD_START = 'wordStart';
+const SHORTCUT_LINE_END = 'lineEnd';
+const SHORTCUT_LINE_START = 'lineStart';

@@ -3,9 +3,11 @@ import 'dart:developer';
 import 'dart:io';
 
 import 'package:editor_app/base/components/EditorContainer.dart';
+import 'package:editor_app/base/components/TabsHeader.dart';
 import 'package:editor_app/base/helpers/ShortcutsAndActionMaps.dart';
 import 'package:editor_app/base/helpers/workspaceShortcutsAndActions.dart';
 import 'package:editor_app/base/models/DirectoryWatchers.dart';
+import 'package:editor_app/base/models/TabsModel.dart' as tm;
 import 'package:flutter/material.dart';
 import 'package:file_selector/file_selector.dart';
 import 'package:path/path.dart' as path;
@@ -20,6 +22,7 @@ class Workspace extends StatefulWidget {
 class _Workspace extends State<Workspace> {
 
   late ShortcutsAndActionsMaps sAndAMaps;
+  late tm.TabsModel tabsModel;
   String? workspacePath;
   List<String> openFiles = [];
   String? activeFilePath;
@@ -28,7 +31,14 @@ class _Workspace extends State<Workspace> {
   void initState() {
     super.initState();
 
+    tm.SingleTabModel untitledTab = tm.SingleTabModel(
+      id: '1',
+      type: 'file',
+      title: 'Untitled',
+      ContentWidget: EditorContainer(filePath: null, onCloseFile: this.closeFile,));
+
     sAndAMaps = getWorkspaceShortcutsAndActions(onOpenFolder: handleOpenWorkspace, onOpenFile: handleOpenFile);
+    tabsModel = tm.TabsModel(tabs: [untitledTab]);
   }
 
   @override
@@ -92,9 +102,19 @@ class _Workspace extends State<Workspace> {
       shortcuts: sAndAMaps.shortcuts,
       child: Actions(
         actions: sAndAMaps.actions,
-        child: EditorContainer(
-          filePath: activeFilePath,
-          onCloseFile: closeFile,
+        child: SizedBox(
+          height: double.infinity,
+          child: Column(
+            mainAxisSize: MainAxisSize.max,
+            children: [
+              TabsHeader(model: tabsModel),
+              Expanded(
+                child: EditorContainer(
+                  onCloseFile: closeFile,
+                )
+              )
+            ],
+          )
         )
       )
     );

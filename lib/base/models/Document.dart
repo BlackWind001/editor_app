@@ -341,7 +341,8 @@ class DocumentsStore {
 
   bool removeDocument (String key) {
     const errorName = 'DocumentStore~removeDocument';
-    if (!_map.containsKey(key)) {
+    Document? d = _map[key];
+    if (d == null) {
       log(
         'Error occurred while removing document: $key',
         name: errorName,
@@ -349,6 +350,7 @@ class DocumentsStore {
       return false;
     }
 
+    d.cleanup();
     _removeEntry(key);
 
     return true;

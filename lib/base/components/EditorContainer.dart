@@ -49,7 +49,7 @@ class _EditorContainer extends State<EditorContainer> {
 
   @override
   void dispose () {
-    document.cleanup();
+    documentStore.removeDocument(document.id);
     super.dispose();
   }
 
@@ -71,7 +71,7 @@ class _EditorContainer extends State<EditorContainer> {
         // This line allows the parent to clean up.
         onCloseFile(oldFilePath);
         // This line allows the document and its listeners to be cleaned up
-        document.cleanup();
+       documentStore.removeDocument(document.id);
       }
       if (filePath != null) {
         handleInitialFileLoadAndRead(filePath);

@@ -121,7 +121,7 @@ class _TabsHeader extends State<TabsHeader> {
           child: Wrap(
             children: [
               ...model.tabs.map((tab) {
-                return _Tab(title: tab.title ?? '');
+                return _Tab(title: tab.title);
               })
             ],
           )

@@ -26,38 +26,25 @@ class EditorContainer extends StatefulWidget{
 }
 
 class _EditorContainer extends State<EditorContainer> {
-  Document document = Document('\n');
+  Document document = documentStore.createEmptyDocument();
   READY_STATE state = READY_STATE.UNINITIALIZED;
 
   Future<void> handleInitialFileLoadAndRead (String filePath) async {
     state = READY_STATE.LOADING;
 
     const errorName = 'EditorLite~handleInitialFileLoadAndRead';
-    try {
-      Document d = await Document.createFromPath(filePath);
 
+    Document? d = await documentStore.createNewDocument(filePath);
+
+    if (d == null) {
+      state = READY_STATE.ERROR;
+      log('Error: Could not load file: $filePath', name: errorName);
+    }
+    else {
       document = d;
       state = READY_STATE.LOADED;
-    } on FileSystemException catch (fileSysException, trace) {
-      log(
-        'Error occurred while loading file: $filePath.',
-        name: errorName,
-        error: fileSysException,
-        stackTrace: trace
-      );
-      state = READY_STATE.ERROR;
-    } catch (e, trace) {
-      log(
-        'Encountered error',
-        name: errorName,
-        error: e,
-        stackTrace: trace
-      );
-      state = READY_STATE.ERROR;
     }
-    finally {
-      setState(() {});
-    }
+    setState(() {});
   }
 
   @override
@@ -99,7 +86,7 @@ class _EditorContainer extends State<EditorContainer> {
     state = READY_STATE.LOADING;
 
     if (widget.filePath == null) {
-      document = Document('\n');
+      document = documentStore.createEmptyDocument();
       state = READY_STATE.LOADED;
     }
     else {

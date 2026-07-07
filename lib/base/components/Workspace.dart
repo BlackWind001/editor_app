@@ -111,6 +111,7 @@ class _Workspace extends State<Workspace> {
               Expanded(
                 child: EditorContainer(
                   onCloseFile: closeFile,
+                  filePath: activeFilePath,
                 )
               )
             ],

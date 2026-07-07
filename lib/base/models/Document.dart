@@ -6,6 +6,9 @@ import 'package:editor_app/base/helpers/FileActions.dart';
 import 'package:editor_app/base/models/DirectoryWatchers.dart';
 import 'package:editor_app/types/OpResult.dart';
 import 'package:flutter/widgets.dart';
+import 'package:uuid/uuid.dart';
+
+const uuid = Uuid();
 
 class NotifyingLine with ChangeNotifier {
   String initial = '';
@@ -282,3 +285,75 @@ class Document {
   }
 
 }
+
+class DocumentsStore {
+  final Map<String, Document> _map = {};
+
+  DocumentsStore();
+
+  void _addEntry(String key, Document d) {
+    _map[key] = d;
+  }
+
+  void _removeEntry (String key) {
+    _map.remove(key);
+  }
+
+  Document createEmptyDocument () {
+    String key = uuid.v1();
+    Document d = Document('\n');
+
+    _addEntry(key, d);
+
+    return d;
+  }
+
+  Future<Document?> createNewDocument (String filePath) async {
+    String key = uuid.v1();
+    Document d;
+    const errorName = 'DocumentStore~createNewDocument';
+
+    try {
+      d = await Document.createFromPath(filePath);
+
+      _addEntry(key, d);
+      return d;
+    } on FileSystemException catch (fileSysException, trace) {
+      log(
+        'Error occurred while loading file: $filePath.',
+        name: errorName,
+        error: fileSysException,
+        stackTrace: trace
+      );
+    } catch (e, trace) {
+      log(
+        'Encountered error',
+        name: errorName,
+        error: e,
+        stackTrace: trace
+      );
+    }
+    return null;
+  }
+
+  bool removeDocument (String key) {
+    const errorName = 'DocumentStore~removeDocument';
+    if (!_map.containsKey(key)) {
+      log(
+        'Error occurred while removing document: $key',
+        name: errorName,
+      );
+      return false;
+    }
+
+    _removeEntry(key);
+
+    return true;
+  }
+
+  Document? getDocument(String key) {
+    return _map[key];
+  }
+}
+
+DocumentsStore documentStore = DocumentsStore();

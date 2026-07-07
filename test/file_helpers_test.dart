@@ -121,7 +121,7 @@ void main() {
 
   group('Document.save', () {
     test('fails when there is no backing file', () async {
-      final res = await Document('hello').save();
+      final res = await documentStore.createEmptyDocument().save();
 
       expect(res.success, isFalse);
       expect(res.errMsg, 'Document._file is null');
@@ -130,9 +130,10 @@ void main() {
     test('refuses to save when the file was modified externally', () async {
       final f = File('${tempDir.path}/h.txt');
       await f.writeAsString('hi');
-      final doc = await Document.createFromPath(f.path);
+      final doc = await documentStore.createNewDocument(f.path);
 
-      doc.hasFileBeenModifiedExternally = true;
+      expect(doc, isNotNull);
+      doc!.hasFileBeenModifiedExternally = true;
       final res = await doc.save();
 
       expect(res.success, isFalse);

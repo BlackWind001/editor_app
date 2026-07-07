@@ -30,6 +30,7 @@ class NotifyingLine with ChangeNotifier {
 }
 
 class Document {
+  late String id;
   File? _file;
   DateTime? _lastWrittenTimestamp;
   List<NotifyingLine> _lines = [];
@@ -38,6 +39,7 @@ class Document {
   bool hasUnsavedChanges = false;
 
   Document(String initial) {
+    id = uuid.v4();
     if (initial.isEmpty) {
       _lines = [];
       return;
@@ -46,9 +48,12 @@ class Document {
     _load(initial.split('\n'));
   }
 
-  Document._ ();
+  Document._ () {
+    id = uuid.v4();
+  }
 
   Document.fromLines(List<String> initialLines) {
+    id = uuid.v4();
     if (initialLines.isEmpty) {
       _lines = [];
       return;
@@ -300,23 +305,21 @@ class DocumentsStore {
   }
 
   Document createEmptyDocument () {
-    String key = uuid.v1();
     Document d = Document('\n');
 
-    _addEntry(key, d);
+    _addEntry(d.id, d);
 
     return d;
   }
 
   Future<Document?> createNewDocument (String filePath) async {
-    String key = uuid.v1();
     Document d;
     const errorName = 'DocumentStore~createNewDocument';
 
     try {
       d = await Document.createFromPath(filePath);
 
-      _addEntry(key, d);
+      _addEntry(d.id, d);
       return d;
     } on FileSystemException catch (fileSysException, trace) {
       log(

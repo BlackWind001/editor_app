@@ -5,3 +5,4 @@
 3. The file being modified event is not exactly well handled right now. Atleast as of commit f1d9bf1f62809f13b7f8bbf94b54f7ced36689b6 where it was introduced. Since the flow deals with file systems, tests for this case are also not exactly working well. Need to work on this more. But pausing now since it is a few too many cases to handle.
 4. As of commit fc7d223158b277bc6e10716559304f04496151aa, I noticed an issue where after keeping the app running for a long period of time and performing hot reload, the app seemed to become unresponsive. The cursor did not show and I couldn't close the app using Cmd+Q. Need to check more about this.
 5. Not exactly an edge case but I need to open a dialog to create a new file for when I hit Cmd + S on an unsaved document. ✅
+6. UX: There is a flash whenever I switch files. It is very dislikable.

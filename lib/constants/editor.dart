@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 const EDITOR_BACKGROUND = Color(0xFF181818);
+const INACTIVE_TAB_BACKGROUND = Color(0xFF2D2D2D);
+const ACTIVE_TAB_BACKGROUND = Color(0xFF1E1E1E);
 const ACTIVE_LINE_BACKGROUND = Color(0xFF262626);
 const PRIMARY_TEXT_COLOR = Color(0xEBE4E4E4);
 const EDITOR_LINE_HEIGHT = 32.0;

@@ -1,32 +1,36 @@
 import 'package:editor_app/base/models/EditorSettings.dart';
 import 'package:editor_app/base/models/TabsModel.dart';
 import 'package:editor_app/base/styles/editorStyles.dart';
+import 'package:editor_app/constants/editor.dart';
 import 'package:flutter/material.dart';
 
 const MAX_CHARS = 30;
 
-class _Tab extends StatefulWidget {
-  final String title;
+typedef CreateTabCallback = void Function();
+typedef CloseTabCallback = void Function(String id);
 
-  const _Tab({ super.key, required this.title });
+class _Tab extends StatefulWidget {
+  final SingleTabModel model;
+  final CloseTabCallback onClose;
+
+  const _Tab({ super.key, required this.model, required this.onClose });
 
   @override
   State<_Tab> createState() => _TabImpl();
 }
 
 class _TabImpl extends State<_Tab> {
-  late String title;
   late double tabHeight;
   late double tabVerticalPadding;
   late double tabHorizontalPadding;
   late double tabContentSpacing;
+  late double tabIconSize;
   TextStyle tabTextStyle = getContentStyle();
 
   @override
   void initState() {
     super.initState();
 
-    title = widget.title;
     determineTabStyles();
 
     edSettings.addListener(updateTabStyles);
@@ -48,6 +52,7 @@ class _TabImpl extends State<_Tab> {
     tabHorizontalPadding = edSettings.fontSize * 0.75;
     tabHeight = edSettings.lineHeightMultiplier * edSettings.fontSize + 2*tabVerticalPadding;
     tabContentSpacing = edSettings.fontSize * 1;
+    tabIconSize = edSettings.fontSize * 1;
   }
 
   void updateTabStyles () {
@@ -59,7 +64,7 @@ class _TabImpl extends State<_Tab> {
   void determineTextStyle () {
     final TextStyle defaultStyle = DefaultTextStyle.of(context).style;
     final TextStyle customStyle = TextStyle(
-      color: Colors.red
+      color: Colors.white70
     );
 
     tabTextStyle = defaultStyle.merge(getContentStyle()).merge(customStyle);
@@ -70,21 +75,32 @@ class _TabImpl extends State<_Tab> {
 
     return Container(
       height: tabHeight,
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.blueAccent.shade100, width: 1),
+        color: ACTIVE_TAB_BACKGROUND
+      ),
       padding: EdgeInsetsGeometry.symmetric(
         vertical: tabVerticalPadding,
         horizontal: tabHorizontalPadding
       ),
       child: Row(
         spacing: tabContentSpacing,
+        mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            title,
+            widget.model.title,
             style: tabTextStyle,
           ),
-          Icon(
-            Icons.close,
-            size: edSettings.fontSize,
-          )
+          IconButton(
+            onPressed: () { widget.onClose(widget.model.id); },
+            constraints: BoxConstraints(),
+            icon: Icon(Icons.close),
+            style: IconButton.styleFrom(
+              padding: EdgeInsets.zero,
+              iconSize: tabIconSize,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+            ),
+        )
         ],
       ),
     );
@@ -95,8 +111,17 @@ class _TabImpl extends State<_Tab> {
 class TabsHeader extends StatefulWidget {
 
   final TabsModel model;
+  final String? activeTabId;
+  final CreateTabCallback onCreateNewTab;
+  final CloseTabCallback onCloseTab;
 
-  const TabsHeader({ super.key, required this.model });
+  const TabsHeader({
+    super.key,
+    required this.model,
+    required this.activeTabId,
+    required this.onCloseTab,
+    required this.onCreateNewTab
+  });
 
   @override
   State<TabsHeader> createState() => _TabsHeader();
@@ -121,21 +146,23 @@ class _TabsHeader extends State<TabsHeader> {
           child: Wrap(
             children: [
               ...model.tabs.map((tab) {
-                return _Tab(title: tab.title);
+                return _Tab(model: tab, onClose: widget.onCloseTab,);
               })
             ],
           )
         ),
-        // IconButton(
-        //   onPressed: () {},
-        //   icon: Icon(Icons.add),
-        //   iconSize: 12.0,
-        //   style: IconButton.styleFrom(
-        //     backgroundColor: Colors.amber,
-        //     shape: RoundedRectangleBorder(borderRadius: BorderRadius.zero),
-        //     fixedSize: Size(16.0, 16.0)
-        //   ),
-        // )
+        IconButton(
+          onPressed: () {
+            widget.onCreateNewTab();
+          },
+          icon: Icon(Icons.add),
+          iconSize: 12.0,
+          style: IconButton.styleFrom(
+            backgroundColor: Colors.amber,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+            fixedSize: Size(16.0, 16.0)
+          ),
+        )
       ],
     );
   }

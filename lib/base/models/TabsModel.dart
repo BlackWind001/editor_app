@@ -8,9 +8,8 @@ class SingleTabModel {
   final String id;
   final String type;
   final String title;
-  final Widget ContentWidget;
 
-  const SingleTabModel({ required this.id, required this.type, required this.title, required this.ContentWidget });
+  const SingleTabModel({ required this.id, required this.type, required this.title,});
 }
 
 // ---------VIEWMODEL---------

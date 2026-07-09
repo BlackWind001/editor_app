@@ -491,7 +491,6 @@ class _EditorLite extends State<EditorLite> {
                     return Container(
                       height: lineHeight,
                       width: lineNumberGutterWidth,
-                      color: EDITOR_BACKGROUND,
                       child: GestureDetector(
                         onTapDown: (TapDownDetails details) { handleTapDownEvent(i, details); },
                         child: Line(
@@ -514,7 +513,6 @@ class _EditorLite extends State<EditorLite> {
     final viewWidget = Container(
       width: double.infinity,
       height: double.infinity,
-      color: EDITOR_BACKGROUND,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.start,
         children: [

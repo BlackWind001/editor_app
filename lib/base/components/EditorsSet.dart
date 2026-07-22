@@ -13,10 +13,8 @@ import 'package:editor_app/base/models/TabsModel.dart' as tm;
 /// a set of editors. A workspace can have multiple
 /// editors
 class EditorsSet extends StatefulWidget {
-  String? activeFilePath;
-  CloseFileCallback onCloseFile;
 
-  EditorsSet({ super.key, required this.onCloseFile, this.activeFilePath });
+  EditorsSet({ super.key });
 
   @override
   State<EditorsSet> createState() => _EditorsSet();
@@ -30,24 +28,56 @@ class _EditorsSet extends State<EditorsSet> {
     super.initState();
     
     model = EditorsSetModel();
-    print('Finished initState');
   }
 
   void handleCreateNewTab () {
-    model.createEmptyTab();
+    model.addEditor(null, makeActiveEditor: true);
 
     setState(() {});
   }
 
   void handleCloseTab (String id) {
-    model.closeTab(id);
+    model.removeEditor(id);
 
     setState(() {});
   }
 
+  void handleClickOnTab (String id) {
+    model.setActiveEditor(id);
+
+    setState(() {});
+  }
+
+  Widget getWorkbench () {
+    String name = '_EditorsSet~getWorkbench';
+    switch (model.state) {
+      case READY_STATE.LOADING:
+        return Container(
+          color: EDITOR_BACKGROUND,
+          child: Text('Loading...')
+        );
+      case READY_STATE.LOADED:
+        if (model.activeEditorModel == null) {
+          throw('EditorsSetModel is marked as LOADED but the document is null', name: name);
+        }
+        else {
+          return EditorContainer(elModel: model.activeEditorModel!, esModel: model);
+        }
+      case READY_STATE.ERROR:
+        return Container(
+          color: EDITOR_BACKGROUND,
+          child: Text('Error occurred. Please look at the logs.')
+        );
+      case READY_STATE.UNINITIALIZED:
+        return Container(
+          color: EDITOR_BACKGROUND,
+          child: Text("You shouldn't be seeing this")
+        );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    print('Building');
     return Container(
       height: double.infinity,
       color: EDITOR_BACKGROUND,
@@ -56,15 +86,13 @@ class _EditorsSet extends State<EditorsSet> {
         children: [
           TabsHeader(
             model: model.tabsModel,
-            activeTabId: model.activeTabId,
+            activeTabId: model.activeEditorModel?.document.id,
             onCreateNewTab: handleCreateNewTab,
             onCloseTab: handleCloseTab,
+            onClickOnTab: handleClickOnTab
           ),
           Expanded(
-            child: EditorContainer(
-              onCloseFile: widget.onCloseFile,
-              filePath: widget.activeFilePath,
-            )
+            child: getWorkbench()
           )
         ],
       )

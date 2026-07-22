@@ -21,8 +21,6 @@ class _Workspace extends State<Workspace> {
 
   late ShortcutsAndActionsMaps sAndAMaps;
   String? workspacePath;
-  List<String> openFiles = [];
-  String? activeFilePath;
 
   @override
   void initState() {
@@ -37,36 +35,12 @@ class _Workspace extends State<Workspace> {
     super.dispose();
   }
 
-  // ToDo: Move the logic to open and close files from
-  // this component to the EditorsSet.
   Future<void> closeFile(String filePath) async {
-    String name = 'Workspace~closeFile';
-    int fileIndex = openFiles.indexOf(filePath);
-    if (fileIndex == -1) {
-      log('Failed for $filePath since there was no entry in opened files', name: name);
-      throw 'Close failed for $filePath since there was no entry in opened files';
-    }
-
-    openFiles.removeAt(fileIndex);
+    assert(true, "Reimplement the closeFile shortcut somewhere else");
   }
 
   void _handleOF () async {
-    final XFile? openedFile = await openFile();
-    final String name = 'Workspace~_handleOF';
-
-    if (openedFile == null) {
-      log('User has cancelled opening file', name: name);
-      return;
-    }
-
-    // Track the file as one of oepned files.
-    openFiles.add(openedFile.path);
-
-    setState(() {
-      activeFilePath = openedFile.path;
-    });
-
-    log('Opening file $activeFilePath', name: name);
+    assert(true, "Reimplement the openFile shortcut somewhere else");
   }
 
   void handleOpenFile (OpenFileIntent intent) {
@@ -94,7 +68,7 @@ class _Workspace extends State<Workspace> {
       shortcuts: sAndAMaps.shortcuts,
       child: Actions(
         actions: sAndAMaps.actions,
-        child: EditorsSet(onCloseFile: closeFile)
+        child: EditorsSet()
       )
     );
   }

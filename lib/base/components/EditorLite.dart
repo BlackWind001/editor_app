@@ -4,6 +4,7 @@ import 'dart:math' as math;
 import 'package:editor_app/base/helpers/ShortcutsAndActionMaps.dart';
 import 'package:editor_app/base/helpers/editorShortcutsAndActions.dart';
 import 'package:editor_app/base/helpers/inputEffectDelegator.dart';
+import 'package:editor_app/base/models/EditorLiteModel.dart';
 import 'package:editor_app/base/models/EditorSettings.dart';
 import 'package:editor_app/base/styles/editorStyles.dart';
 import 'package:editor_app/constants/editor.dart';
@@ -25,31 +26,26 @@ const DEFAULT_GUTTER_PADDING = 8.0;
 
 class EditorLite extends StatefulWidget {
 
-  const EditorLite({ super.key, required this.document });
+  final EditorLiteModel model;
 
-  final Document document;
+  const EditorLite({ super.key, required this.model });
 
   @override
   State<EditorLite> createState() => _EditorLite();
 }
 
 class _EditorLite extends State<EditorLite> {
-  int cursorLine = 0;
-  int cursorIndex = 0;
-  late ScrollController _vLineScrollController = ScrollController();
-  late ScrollController _vGutterScrollController = ScrollController();
-  final LinkedScrollControllerGroup scrollControllerGroup = LinkedScrollControllerGroup();
-  final ScrollController _hScrollController = ScrollController();
-  late Document document;
   late ShortcutsAndActionsMaps sAndAMaps;
-  double lineNumberGutterWidth = GUTTER_WIDTH;
-  double longestLineWidth = 0.0;
+
+  // Convenience local property for easier access.
+  // Don't want to keep using widget.model.<propName> everytime
+  late EditorLiteModel model;
 
   @override
   void initState() {
     super.initState();
 
-    document = widget.document;
+    model = widget.model;
     sAndAMaps = getEditorShortcutsAndActions(
       onZoomIn: handleZoomIn,
       onZoomOut: handleZoomOut,
@@ -59,14 +55,14 @@ class _EditorLite extends State<EditorLite> {
       onLineEnd: handleLineEnd,
       onLineStart: handleLineStart
     );
-    _vLineScrollController = scrollControllerGroup.addAndGet();
-    _vGutterScrollController = scrollControllerGroup.addAndGet();
+    model.vLineScrollController = model.scrollControllerGroup.addAndGet();
+    model.vGutterScrollController = model.scrollControllerGroup.addAndGet();
   }
 
   @override
   void didChangeDependencies () {
     super.didChangeDependencies();
-    lineNumberGutterWidth = getLineNumberGutterWidth();
+    model.lineNumberGutterWidth = getLineNumberGutterWidth();
     updateLongestLineWidth();
   }
 
@@ -74,22 +70,22 @@ class _EditorLite extends State<EditorLite> {
   void didUpdateWidget(covariant EditorLite oldWidget) {
     super.didUpdateWidget(oldWidget);
 
-    if (oldWidget.document != document) {
-      print('didUpdateWidget: NOT IMPLEMENTED');
+    if (oldWidget.model != widget.model) {
+      model = widget.model;
     }
   }
 
   @override
   void dispose () {
-    _vLineScrollController.dispose();
-    _vGutterScrollController.dispose();
-    _hScrollController.dispose();
+    model.vLineScrollController.dispose();
+    model.vGutterScrollController.dispose();
+    model.hScrollController.dispose();
     super.dispose();
   }
 
   void updateLongestLineWidth () {
     final defaultStyle = DefaultTextStyle.of(context).style;
-    final nLine = document.lineAtIndex(document.longestLineIndex);
+    final nLine = model.document.lineAtIndex(model.document.longestLineIndex);
 
     if (nLine == null) {
       return;
@@ -108,19 +104,19 @@ class _EditorLite extends State<EditorLite> {
     lineNumberPainter.dispose();
 
     setState(() {
-      longestLineWidth = res;
+      model.longestLineWidth = res;
     });
   }
   bool updateCursorPosition (int updatedLine, int updatedIndex,{bool skipScroll = false}) {
 
-    var currentLine = document.lineAtIndex(updatedLine);
+    var currentLine = model.document.lineAtIndex(updatedLine);
 
     if (currentLine == null) {
       return false;
     }
 
     if (
-      updatedLine < 0 || updatedLine >= document.getLength() ||
+      updatedLine < 0 || updatedLine >= model.document.getLength() ||
       updatedIndex < 0 || updatedIndex > currentLine.pcStr.piecedValue.length
     )
     {
@@ -128,23 +124,23 @@ class _EditorLite extends State<EditorLite> {
       return false;
     }
     setState(() {
-      cursorLine = updatedLine;
-      cursorIndex = updatedIndex;
+      model.cursorLine = updatedLine;
+      model.cursorIndex = updatedIndex;
     });
 
-    if (_vLineScrollController.hasClients) {
+    if (model.vLineScrollController.hasClients) {
       // Check if the current line is within the viewport
-      var viewportHeight = _vLineScrollController.position.viewportDimension;
-      var offset = _vLineScrollController.offset;
+      var viewportHeight = model.vLineScrollController.position.viewportDimension;
+      var offset = model.vLineScrollController.offset;
       double lineHeight = (edSettings.fontSize * edSettings.lineHeightMultiplier);
       var lineTop = lineHeight * (updatedLine);
       var lineBottom = lineHeight * (updatedLine + 1);
 
       if (lineTop < offset) {
-        _vLineScrollController.jumpTo(lineTop);
+        model.vLineScrollController.jumpTo(lineTop);
       }
       else if (lineBottom >= (offset + viewportHeight)) {
-        _vLineScrollController.jumpTo(lineBottom - viewportHeight);
+        model.vLineScrollController.jumpTo(lineBottom - viewportHeight);
       }
     }
 
@@ -152,17 +148,17 @@ class _EditorLite extends State<EditorLite> {
   }
 
   void handleInsert (String? key, KeyEvent event) {
-    int updatedIndex = cursorIndex, updatedLine = cursorLine;
+    int updatedIndex = model.cursorIndex, updatedLine = model.cursorLine;
 
     if (key == null) {
       if (event.logicalKey == LogicalKeyboardKey.enter) {
-        document.insertNewLine(cursorLine, cursorIndex);
+        model.document.insertNewLine(model.cursorLine, model.cursorIndex);
         updatedLine += 1;
         updatedIndex = 0;
       }
     }
     else {
-      document.insertInLine(cursorLine, cursorIndex, key);
+      model.document.insertInLine(model.cursorLine, model.cursorIndex, key);
       updatedIndex +=1;
     }
 
@@ -171,22 +167,22 @@ class _EditorLite extends State<EditorLite> {
   }
 
   void handleBackspacePress (KeyEvent event) {
-    NotifyingLine? nLine = document.lineAtIndex(cursorLine);
-    int updatedIndex = cursorIndex, updatedLine = cursorLine;
+    NotifyingLine? nLine = model.document.lineAtIndex(model.cursorLine);
+    int updatedIndex = model.cursorIndex, updatedLine = model.cursorLine;
 
     if (nLine == null) {
       return;
     }
 
-    if (cursorIndex == 0) {
-      if (cursorLine != 0) {
-        NotifyingLine? prevLine = document.lineAtIndex(cursorLine - 1);
+    if (model.cursorIndex == 0) {
+      if (model.cursorLine != 0) {
+        NotifyingLine? prevLine = model.document.lineAtIndex(model.cursorLine - 1);
 
         if (prevLine == null) {
           return;
         }
 
-        document.mergeLines(cursorLine - 1, cursorLine + 1);
+        model.document.mergeLines(model.cursorLine - 1, model.cursorLine + 1);
         updatedLine -= 1;
         updatedIndex = prevLine.pcStr.piecedValue.length;
       }
@@ -195,7 +191,7 @@ class _EditorLite extends State<EditorLite> {
       }
     }
     else {
-      nLine.delete(cursorIndex - 1, 1);
+      nLine.delete(model.cursorIndex - 1, 1);
       updatedIndex -= 1;
     }
 
@@ -233,14 +229,14 @@ class _EditorLite extends State<EditorLite> {
   void handleZoomIn (ZoomInIntent intent) {
     edSettings.setFontSize(edSettings.fontSize + 1);
     setState(() {
-      lineNumberGutterWidth = getLineNumberGutterWidth();
+      model.lineNumberGutterWidth = getLineNumberGutterWidth();
     });
     updateLongestLineWidth();
   }
   void handleZoomOut (ZoomOutIntent intent) {
     edSettings.setFontSize(edSettings.fontSize - 1);
     setState(() {
-      lineNumberGutterWidth = getLineNumberGutterWidth();
+      model.lineNumberGutterWidth = getLineNumberGutterWidth();
     });
     updateLongestLineWidth();
   }
@@ -248,7 +244,7 @@ class _EditorLite extends State<EditorLite> {
   void handleSave (SaveIntent intent) async {
     OpResult res;
     String name = 'EditorLite~handleSave';
-    if (!document.isAttachedToFile) {
+    if (!model.document.isAttachedToFile) {
       final FileSaveLocation? location = await getSaveLocation(
         suggestedName: 'untitled'
       );
@@ -257,10 +253,10 @@ class _EditorLite extends State<EditorLite> {
         log('User has cancelled file save', name: name);
         return;
       }
-      res = await document.create(File(location.path));
+      res = await model.document.create(File(location.path));
     }
     else {
-      res = await document.save();
+      res = await model.document.save();
     }
 
     if (!res.success) {
@@ -279,11 +275,11 @@ class _EditorLite extends State<EditorLite> {
   void handleArrowKeyPress (KeyEvent event) {
     switch (event.logicalKey) {
       case LogicalKeyboardKey.arrowUp: {
-        var updatedLine = cursorLine, updatedIndex = cursorIndex;
+        var updatedLine = model.cursorLine, updatedIndex = model.cursorIndex;
 
         updatedLine--;
 
-        if (cursorLine == 0) {
+        if (model.cursorLine == 0) {
           updatedIndex = 0;
           updatedLine++; // resetting the line value from earlier.
           // The reason I am doing it this way is because I want optimistic update of the value.
@@ -295,7 +291,7 @@ class _EditorLite extends State<EditorLite> {
           // significantly wrong with it.
         }
 
-        NotifyingLine? targetLine = document.lineAtIndex(updatedLine);
+        NotifyingLine? targetLine = model.document.lineAtIndex(updatedLine);
         if (targetLine!= null && updatedIndex > targetLine.pcStr.piecedValue.length) {
           updatedIndex = targetLine.pcStr.piecedValue.length;
         }
@@ -304,17 +300,17 @@ class _EditorLite extends State<EditorLite> {
         break;
       }
       case LogicalKeyboardKey.arrowDown: {
-        var updatedLine = cursorLine, updatedIndex = cursorIndex;
-        NotifyingLine? currentLine = document.lineAtIndex(cursorLine);
+        var updatedLine = model.cursorLine, updatedIndex = model.cursorIndex;
+        NotifyingLine? currentLine = model.document.lineAtIndex(model.cursorLine);
 
         updatedLine++;
 
-        if (cursorLine == (document.getLength()-1) && currentLine != null) {
+        if (model.cursorLine == (model.document.getLength()-1) && currentLine != null) {
           updatedLine--; // reset from above
           updatedIndex = currentLine.pcStr.piecedValue.length;
         }
 
-        NotifyingLine? targetLine = document.lineAtIndex(updatedLine);
+        NotifyingLine? targetLine = model.document.lineAtIndex(updatedLine);
         if (targetLine!= null && updatedIndex > targetLine.pcStr.piecedValue.length) {
           updatedIndex = targetLine.pcStr.piecedValue.length;
         }
@@ -323,14 +319,14 @@ class _EditorLite extends State<EditorLite> {
         break;
       }
       case LogicalKeyboardKey.arrowLeft: {
-        var updatedLine = cursorLine, updatedIndex = cursorIndex;
+        var updatedLine = model.cursorLine, updatedIndex = model.cursorIndex;
 
         updatedIndex--;
 
-        if (cursorIndex == 0) {
+        if (model.cursorIndex == 0) {
           updatedLine--;
 
-          NotifyingLine? targetLine = document.lineAtIndex(updatedLine);
+          NotifyingLine? targetLine = model.document.lineAtIndex(updatedLine);
 
           if (targetLine == null) {
             return;
@@ -342,12 +338,12 @@ class _EditorLite extends State<EditorLite> {
         break;
       }
       case LogicalKeyboardKey.arrowRight: {
-        var updatedLine = cursorLine, updatedIndex = cursorIndex;
-        NotifyingLine? currentLine = document.lineAtIndex(cursorLine);
+        var updatedLine = model.cursorLine, updatedIndex = model.cursorIndex;
+        NotifyingLine? currentLine = model.document.lineAtIndex(model.cursorLine);
 
         updatedIndex++;
 
-        if (currentLine != null && cursorIndex == currentLine.pcStr.piecedValue.length) {
+        if (currentLine != null && model.cursorIndex == currentLine.pcStr.piecedValue.length) {
           updatedLine++;
           updatedIndex = 0;
         }
@@ -361,8 +357,8 @@ class _EditorLite extends State<EditorLite> {
 
   void handleTapDownEvent (int lineIndex, TapDownDetails details) {
     
-    NotifyingLine nLine = document.lineAtIndex(lineIndex)!;
-    int updatedLine = lineIndex, updatedIndex = cursorIndex;
+    NotifyingLine nLine = model.document.lineAtIndex(lineIndex)!;
+    int updatedLine = lineIndex, updatedIndex = model.cursorIndex;
 
     // TextPainter specific logic:
     // We are merging the default style with the text style because
@@ -387,21 +383,21 @@ class _EditorLite extends State<EditorLite> {
   }
 
   void handleGoToWordEnd (WordEndIntent intent) {
-    CursorPos newPos = getNextWordStart(originalCursorIndex: cursorIndex, originalLineIndex: cursorLine, document: document);
+    CursorPos newPos = getNextWordStart(originalCursorIndex: model.cursorIndex, originalLineIndex: model.cursorLine, document: model.document);
     setState(() {
-      cursorIndex = newPos.index;
-      cursorLine = newPos.line;
+      model.cursorIndex = newPos.index;
+      model.cursorLine = newPos.line;
     });
   }
   void handleGoToWordStart (WordStartIntent intent) {
-    CursorPos newPos = getPreviousWordStart(originalCursorIndex: cursorIndex, originalLineIndex: cursorLine, document: document);
+    CursorPos newPos = getPreviousWordStart(originalCursorIndex: model.cursorIndex, originalLineIndex: model.cursorLine, document: model.document);
     setState(() {
-      cursorIndex = newPos.index;
-      cursorLine = newPos.line;
+      model.cursorIndex = newPos.index;
+      model.cursorLine = newPos.line;
     });
   }
   void handleLineEnd (LineEndIntent intent) {
-    String? currentLine = document.lineAtIndex(cursorLine)?.pcStr.piecedValue;
+    String? currentLine = model.document.lineAtIndex(model.cursorLine)?.pcStr.piecedValue;
     String name = 'EditorLite~handleLineEnd';
     String msg;
 
@@ -411,10 +407,10 @@ class _EditorLite extends State<EditorLite> {
       throw('$name:$msg');
     }
 
-    updateCursorPosition(cursorLine, currentLine.length);
+    updateCursorPosition(model.cursorLine, currentLine.length);
   }
   void handleLineStart (LineStartIntent intent) {
-    String? currentLine = document.lineAtIndex(cursorLine)?.pcStr.piecedValue;
+    String? currentLine = model.document.lineAtIndex(model.cursorLine)?.pcStr.piecedValue;
     String name = 'EditorLite~handleLineStart';
     String msg;
 
@@ -424,10 +420,10 @@ class _EditorLite extends State<EditorLite> {
       throw('$name:$msg');
     }
 
-    final newPos = getFirstWordOrOtherBoundaryStart(originalCursorIndex: cursorIndex, originalLineIndex: cursorLine, document: document);
+    final newPos = getFirstWordOrOtherBoundaryStart(originalCursorIndex: model.cursorIndex, originalLineIndex: model.cursorLine, document: model.document);
     setState(() {
-      cursorIndex = newPos.index;
-      cursorLine = newPos.line;
+      model.cursorIndex = newPos.index;
+      model.cursorLine = newPos.line;
     });
   }
 
@@ -447,10 +443,10 @@ class _EditorLite extends State<EditorLite> {
   Widget build(BuildContext context) {
     double lineHeight = edSettings.lineHeightMultiplier * edSettings.fontSize;
     final gutter = ListView.builder(
-      controller: _vGutterScrollController,
-      itemCount: document.getLength(),
+      controller: model.vGutterScrollController,
+      itemCount: model.document.getLength(),
       itemBuilder: (context, i) {
-      var cPos = cursorLine == i ? cursorIndex : null;
+      var cPos = model.cursorLine == i ? model.cursorIndex : null;
       return Container(
         height: lineHeight,
         color: cPos == null ? null : ACTIVE_LINE_BACKGROUND,
@@ -466,23 +462,23 @@ class _EditorLite extends State<EditorLite> {
       );
     });
     final linesList = RawScrollbar(
-      controller: _hScrollController,
+      controller: model.hScrollController,
       child: LayoutBuilder(
         builder: (context, constraints) {
           return SingleChildScrollView(
             scrollDirection: Axis.horizontal,
-            controller: _hScrollController,
+            controller: model.hScrollController,
             child: RawScrollbar(
-              controller: _vLineScrollController,
+              controller: model.vLineScrollController,
               child: Row(children: [
                 SizedBox(
-                  width: math.max(longestLineWidth, constraints.maxWidth),
+                  width: math.max(model.longestLineWidth, constraints.maxWidth),
                   child: ListView.builder(
-                    controller: _vLineScrollController,
-                    itemCount: document.getLength(),
+                    controller: model.vLineScrollController,
+                    itemCount: model.document.getLength(),
                     itemBuilder: (context, i) {
-                    var cPos = cursorLine == i ? cursorIndex : null;
-                    NotifyingLine? currentLine = document.lineAtIndex(i);
+                    var cPos = model.cursorLine == i ? model.cursorIndex : null;
+                    NotifyingLine? currentLine = model.document.lineAtIndex(i);
 
                     if (currentLine == null) {
                       return null;
@@ -490,7 +486,7 @@ class _EditorLite extends State<EditorLite> {
 
                     return Container(
                       height: lineHeight,
-                      width: lineNumberGutterWidth,
+                      width: model.lineNumberGutterWidth,
                       child: GestureDetector(
                         onTapDown: (TapDownDetails details) { handleTapDownEvent(i, details); },
                         child: Line(
@@ -517,7 +513,7 @@ class _EditorLite extends State<EditorLite> {
         mainAxisAlignment: MainAxisAlignment.start,
         children: [
           SizedBox(
-            width: lineNumberGutterWidth,
+            width: model.lineNumberGutterWidth,
             child: gutter
           ),
           Expanded(

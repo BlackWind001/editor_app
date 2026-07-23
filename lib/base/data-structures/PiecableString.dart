@@ -9,6 +9,8 @@ typedef Piece = String;
 typedef PieceDetails = Map<String, int>;
 typedef FragmentedPieces = List<Piece>;
 
+const EMPTY_STRING = '';
+
 class PieceRangeDetails {
   int startPieceIndex = -1;
   int endPieceIndex = -1;
@@ -40,7 +42,7 @@ class PieceRangeDetails {
 class PiecableString {
   List<Piece> pieces = [];
 
-  PiecableString ({String originalString = ''}) {
+  PiecableString ({String originalString = EMPTY_STRING}) {
     pieces.add(originalString);
   }
 
@@ -128,6 +130,15 @@ class PiecableString {
       affectedPieceIndex + 1,
       _generateNonEmptyFragments([part1, toInsert, part2])
     );
+
+    // Ensuring pieces is never empty by adding an
+    // empty character element in it.
+    // This is more of a ductape than an actual fix.
+    // When I revisit/refactor this file, I should
+    // figure out why pieces cannot be empty.
+    if (pieces.isEmpty) {
+      pieces.add(EMPTY_STRING);
+    }
   }
 
   void delete (int position, int len) {
@@ -151,7 +162,16 @@ class PiecableString {
       startPieceIndex,
       endPieceIndex + 1,
       _generateNonEmptyFragments([part1, part2])
-      );
+    );
+
+    // Ensuring pieces is never empty by adding an
+    // empty character element in it.
+    // This is more of a ductape than an actual fix.
+    // When I revisit/refactor this file, I should
+    // figure out why pieces cannot be empty.
+    if (pieces.isEmpty) {
+      pieces.add(EMPTY_STRING);
+    }
   }
 
   void mergePieces () {

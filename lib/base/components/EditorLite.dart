@@ -152,13 +152,13 @@ class _EditorLite extends State<EditorLite> {
 
     if (key == null) {
       if (event.logicalKey == LogicalKeyboardKey.enter) {
-        model.document.insertNewLine(model.cursorLine, model.cursorIndex);
+        model.document.insertCharacter(model.cursorLine, model.cursorIndex, '\n');
         updatedLine += 1;
         updatedIndex = 0;
       }
     }
     else {
-      model.document.insertInLine(model.cursorLine, model.cursorIndex, key);
+      model.document.insertCharacter(model.cursorLine, model.cursorIndex, key);
       updatedIndex +=1;
     }
 
@@ -166,33 +166,45 @@ class _EditorLite extends State<EditorLite> {
     updateLongestLineWidth();
   }
 
+  /// A lot of this logic is a reflection of deleteFromLine in
+  /// Document model. Maybe, the insert and delete functions in Document
+  /// should return the updated cursor line and index post operations.
+
   void handleBackspacePress (KeyEvent event) {
     NotifyingLine? nLine = model.document.lineAtIndex(model.cursorLine);
+    NotifyingLine? prevLine = model.document.lineAtIndex(model.cursorLine - 1);
+    
     int updatedIndex = model.cursorIndex, updatedLine = model.cursorLine;
 
     if (nLine == null) {
       return;
     }
 
-    if (model.cursorIndex == 0) {
-      if (model.cursorLine != 0) {
-        NotifyingLine? prevLine = model.document.lineAtIndex(model.cursorLine - 1);
+    model.document.deleteCharacter(model.cursorLine, model.cursorIndex - 1);
 
-        if (prevLine == null) {
-          return;
+    switch (model.cursorIndex == 0) {
+      case true: {
+        switch (model.cursorLine == 0) {
+          case true: {
+            break;
+          }
+          case false: {
+            updatedLine -= 1;
+
+            if (prevLine == null) {
+              break;
+            }
+
+            updatedIndex = prevLine.pcStr.piecedValue.length;
+          }
         }
 
-        model.document.mergeLines(model.cursorLine - 1, model.cursorLine + 1);
-        updatedLine -= 1;
-        updatedIndex = prevLine.pcStr.piecedValue.length;
+        break;
       }
-      else {
-        return;
+      case false: {
+        updatedIndex -= 1;
+        break;
       }
-    }
-    else {
-      nLine.delete(model.cursorIndex - 1, 1);
-      updatedIndex -= 1;
     }
 
     updateCursorPosition(updatedLine, updatedIndex);

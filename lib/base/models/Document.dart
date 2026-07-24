@@ -208,62 +208,124 @@ class Document {
     return _lines.map((el) { return el.pcStr.piecedValue; }).join('\n');
   }
 
-  void insertNewLine (int lineIndex, int position) {
-    NotifyingLine? nLine = lineAtIndex(lineIndex);
-
-    if (nLine == null) {
-      return;
-    }
-
-    String line = nLine.pcStr.piecedValue;
-    List<String> newlyAddedLines = [];
-
-    newlyAddedLines.add(line.substring(0, position));
-    newlyAddedLines.add(line.substring(position));
-    
-    _lines.replaceRange(lineIndex, lineIndex + 1, newlyAddedLines.map((el) => NotifyingLine(el)));
-
-    if (lineIndex == _longestLineIndex) {
-      _longestLineIndex = _calculateLongestLineIndex();
-    }
-    else if (lineIndex < _longestLineIndex) {
-      _longestLineIndex++;
-    }
-
-    hasUnsavedChanges = true;
-  }
-
-  void insertInLine(int lineIndex, int position, Piece toInsert) {
-
+  void insertCharacter (int lineIndex, int position, Piece toInsert) {
     NotifyingLine? nLine = lineAtIndex(lineIndex);
     NotifyingLine? longestLine = _lines[longestLineIndex];
     int newLength;
 
-    if (nLine == null) {
-      return;
+    if (nLine == null || position < 0 || position > nLine.pcStr.piecedValue.length || toInsert.length != 1) {
+      throw '''Document~insertCharacter: Sanity check failed while inserting character:
+      nLine == null: ${nLine == null}
+      position < -1: ${position < -1}
+      position >= nLine.pcStr.piecedValue.length: ${position >= (nLine?.pcStr.piecedValue.length ?? 0)}
+      toInsert.length != 1: ${toInsert.length != 1}
+      ''';
     }
-    nLine.insert(position, toInsert);
 
-    newLength = nLine.pcStr.piecedValue.length;
-  
-    if (newLength > longestLine.pcStr.piecedValue.length) {
-      _longestLineIndex = lineIndex;
+    // I kinda hate that I am using a switch statement instead of if-else but I also weirdly love it.
+    // This is cursed code that I shall protect.
+    switch (toInsert == '\n') {
+      case true: {
+        String line = nLine.pcStr.piecedValue;
+        List<String> newlyAddedLines = [];
+        newlyAddedLines.add(line.substring(0, position));
+        newlyAddedLines.add(line.substring(position));
+        _lines.replaceRange(lineIndex, lineIndex + 1, newlyAddedLines.map((el) => NotifyingLine(el)));
+
+        if (lineIndex == _longestLineIndex) {
+          _longestLineIndex = _calculateLongestLineIndex();
+        }
+
+        if (lineIndex < _longestLineIndex) {
+          _longestLineIndex++;
+        }
+        break;
+      }
+      case false: {
+        nLine.insert(position, toInsert);
+        newLength = nLine.pcStr.piecedValue.length;
+
+        if (newLength > longestLine.pcStr.piecedValue.length) {
+          _longestLineIndex = lineIndex;
+        }
+        break;
+      }
     }
+
     hasUnsavedChanges = true;
   }
 
-  void deleteFromLine(int lineIndex, int position, int len) {
+  /// Deletes a character at position.
+  /// deleteCharacter(2, 0) - deletes the 0th index character on line 2
+  /// deleteCharacter(2, -1) - merges the current line 2 with line 1.
+  void deleteCharacter (int lineIndex, int position) {
+    int lengthToDelete = 1;
     NotifyingLine? nLine = lineAtIndex(lineIndex);
+    NotifyingLine? longestLine = _lines[longestLineIndex];
 
-    if (nLine == null) {
-      return;
+    if (nLine == null || position < -1 || position >= nLine.pcStr.piecedValue.length) {
+      throw '''Document~deleteCharacter: Sanity check failed while deleting character:
+      nLine == null: ${nLine == null}
+      position < -1: ${position < -1}
+      position >= nLine.pcStr.piecedValue.length: ${position >= (nLine?.pcStr.piecedValue.length ?? 0)}
+      ''';
     }
-    nLine.delete(position, len);
 
-    if (lineIndex == _longestLineIndex) {
-      // Recompute longest line length.
-      _longestLineIndex = _calculateLongestLineIndex();
+    /// Switch case to decide if the current and previous lines should be merged.
+    /// Or if the deletion is supposed to happen in the current line
+    switch (position == -1) {
+      case true: {
+
+        /// Switch case for what to do if the current line is the 0th line
+        /// or if it is >0
+        switch (lineIndex == 0) {
+          case true: {
+            break;
+          }
+          case false: {
+            NotifyingLine? prevLine = lineAtIndex(lineIndex - 1);
+            int newLineIndex = lineIndex - 1;
+
+            if (prevLine == null) {
+              throw '''Document~deleteCharacter: Sanity check failed while merging lines:
+              prevLine == null: true
+              ''';
+            }
+
+            mergeLines(lineIndex - 1, lineIndex + 1);
+
+            if (prevLine.pcStr.piecedValue.length >= longestLine.pcStr.piecedValue.length) {
+              _longestLineIndex = newLineIndex;
+            }
+            else {
+              if (newLineIndex < _longestLineIndex) {
+                _longestLineIndex--;
+              }
+
+              /// Why only the if block newLineIndex < _longestLineIndex?
+              /// Case newLineIndex > _longestLineIndex does not need to be handled.
+              /// _longestLine is not affected by any modifications to a line below it.
+              /// Case newLineIndex == _longestLineIndex is already handled in the super if block
+              /// above where we check if the new line's length greater or EQUAL to the longest line length.
+            }
+            break;
+          }
+        }
+        break;
+      }
+      /// Technically the following else case would also match position < -1
+      /// But there is a check for this already at the top. However, I'm still not a fan of
+      /// this approach. Maybe I should move away from the switch case here.
+      case false: {
+        nLine.delete(position, lengthToDelete);
+
+        if (lineIndex == _longestLineIndex) {
+           _longestLineIndex = _calculateLongestLineIndex();
+        }
+        break;
+      }
     }
+
     hasUnsavedChanges = true;
   }
 
@@ -276,6 +338,9 @@ class Document {
     if (mergedLine.length > longestLine.pcStr.piecedValue.length) {
       _longestLineIndex = startLineIndex;
     }
+
+    // IMMEDIATE: What if the merged line was above the previous longest line
+    // Shouldn't the longest line index be updated?
     hasUnsavedChanges = true;
   }
 

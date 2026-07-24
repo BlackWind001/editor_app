@@ -6,3 +6,4 @@
 4. As of commit fc7d223158b277bc6e10716559304f04496151aa, I noticed an issue where after keeping the app running for a long period of time and performing hot reload, the app seemed to become unresponsive. The cursor did not show and I couldn't close the app using Cmd+Q. Need to check more about this.
 5. Not exactly an edge case but I need to open a dialog to create a new file for when I hit Cmd + S on an unsaved document. ✅
 6. UX: There is a flash whenever I switch files. It is very dislikable.
+7. Every operation should have boundary checks. Line insert, delete, merge etc. Without boundary checks, I am passing over the technical debt to the user. This should not happen. P0 🎯

@@ -55,8 +55,6 @@ class _EditorLite extends State<EditorLite> {
       onLineEnd: handleLineEnd,
       onLineStart: handleLineStart
     );
-    model.vLineScrollController = model.scrollControllerGroup.addAndGet();
-    model.vGutterScrollController = model.scrollControllerGroup.addAndGet();
   }
 
   @override
@@ -73,14 +71,6 @@ class _EditorLite extends State<EditorLite> {
     if (oldWidget.model != widget.model) {
       model = widget.model;
     }
-  }
-
-  @override
-  void dispose () {
-    model.vLineScrollController.dispose();
-    model.vGutterScrollController.dispose();
-    model.hScrollController.dispose();
-    super.dispose();
   }
 
   void updateLongestLineWidth () {

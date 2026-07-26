@@ -61,7 +61,11 @@ class _EditorsSet extends State<EditorsSet> {
           throw('EditorsSetModel is marked as LOADED but the document is null', name: name);
         }
         else {
-          return EditorContainer(elModel: model.activeEditorModel!, esModel: model);
+          return EditorContainer(
+            elModel: model.activeEditorModel!,
+            esModel: model,
+            key: Key(model.activeEditorModel!.document.id)
+          );
         }
       case READY_STATE.ERROR:
         return Container(

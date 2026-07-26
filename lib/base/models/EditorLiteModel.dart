@@ -15,9 +15,15 @@ class EditorLiteModel {
   double longestLineWidth = 0.0;
 
   EditorLiteModel ({ required this.document }) {
-    vLineScrollController = ScrollController();
-    vGutterScrollController = ScrollController();
-    hScrollController = ScrollController();
     scrollControllerGroup = LinkedScrollControllerGroup();
+    hScrollController = ScrollController();
+    vLineScrollController = scrollControllerGroup.addAndGet();
+    vGutterScrollController = scrollControllerGroup.addAndGet();
+  }
+
+  void destroy () {
+    vLineScrollController.dispose();
+    vGutterScrollController.dispose();
+    hScrollController.dispose();
   }
 }

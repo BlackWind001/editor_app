@@ -26,6 +26,21 @@ class EditorsSetModel {
     addEditor(null, makeActiveEditor: true);
   }
 
+  void _cleanupEditor (String id) {
+    final index = editors.indexWhere((d) => d.document.id == id);
+
+    if (index == -1) {
+      log('Tab not found', name: 'EditorsSetModel~_cleanupEditor');
+      return;
+    }
+
+    final editor = editors[index];
+
+    // Remove from list and call cleanup.
+    editors.removeAt(index);
+    editor.destroy();
+  }
+
   void removeEditor (String id) {
     state = READY_STATE.LOADING;
     int index = tabsModel.tabs.indexWhere((tab) => tab.id == id);
@@ -37,7 +52,7 @@ class EditorsSetModel {
       return;
     }
 
-    editors.removeWhere((d) => d.document.id == id);
+    _cleanupEditor(id);
     documentStore.removeDocument(id);
     tabsModel.removeTab(id);
 

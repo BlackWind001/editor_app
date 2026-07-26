@@ -24,7 +24,11 @@ var linuxShortcuts = <String, ShortcutCombo>{
   SHORTCUT_WORD_END: ShortcutCombo(key:LogicalKeyboardKey.arrowRight, alt: true),
   SHORTCUT_WORD_START: ShortcutCombo(key:LogicalKeyboardKey.arrowLeft, alt: true),
   SHORTCUT_LINE_END: ShortcutCombo(key:LogicalKeyboardKey.end),
-  SHORTCUT_LINE_START: ShortcutCombo(key:LogicalKeyboardKey.home)
+  SHORTCUT_LINE_START: ShortcutCombo(key:LogicalKeyboardKey.home),
+  SHORTCUT_ACTIVATE_NEXT_EDITOR: ShortcutCombo(key: LogicalKeyboardKey.pageDown, control: true),
+  SHORTCUT_ACTIVATE_PREVIOUS_EDITOR: ShortcutCombo(key: LogicalKeyboardKey.pageUp, control: true),
+  SHORTCUT_CLOSE_CURRENT_EDITOR: ShortcutCombo(key: LogicalKeyboardKey.keyW, control: true),
+  SHORTCUT_CREATE_NEW_EDITOR: ShortcutCombo(key: LogicalKeyboardKey.keyN, control: true)
 };
 
 var macShortcuts = <String, ShortcutCombo>{
@@ -37,7 +41,11 @@ var macShortcuts = <String, ShortcutCombo>{
   SHORTCUT_WORD_END: ShortcutCombo(key:LogicalKeyboardKey.arrowRight, alt: true),
   SHORTCUT_WORD_START: ShortcutCombo(key:LogicalKeyboardKey.arrowLeft, alt: true),
   SHORTCUT_LINE_END: ShortcutCombo(key:LogicalKeyboardKey.arrowRight, meta: true),
-  SHORTCUT_LINE_START: ShortcutCombo(key:LogicalKeyboardKey.arrowLeft, meta: true)
+  SHORTCUT_LINE_START: ShortcutCombo(key:LogicalKeyboardKey.arrowLeft, meta: true),
+  SHORTCUT_ACTIVATE_NEXT_EDITOR: ShortcutCombo(key: LogicalKeyboardKey.arrowRight, meta: true, alt: true),
+  SHORTCUT_ACTIVATE_PREVIOUS_EDITOR: ShortcutCombo(key: LogicalKeyboardKey.arrowLeft, meta: true, alt: true),
+  SHORTCUT_CLOSE_CURRENT_EDITOR: ShortcutCombo(key: LogicalKeyboardKey.keyW, meta: true),
+  SHORTCUT_CREATE_NEW_EDITOR: ShortcutCombo(key: LogicalKeyboardKey.keyN, meta: true)
 };
 
 class Platformspecificshortcuts {

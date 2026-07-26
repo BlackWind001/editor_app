@@ -57,7 +57,13 @@ class EditorsSetModel {
     tabsModel.removeTab(id);
 
     if (id == activeEditorModel?.document.id) {
-      final tab = tabsModel.tabs.elementAtOrNull(index-1);
+      tm.SingleTabModel? tab;
+      try {
+        tab = tabsModel.tabs.elementAtOrNull(index-1);
+      }
+      catch (e) {
+        tab = null;
+      }
       if (tabsModel.tabs.isNotEmpty) {
         if (tab != null) {
           setActiveEditor(tab.id);
@@ -68,6 +74,8 @@ class EditorsSetModel {
       }
       else {
         setActiveEditor(null);
+        state = READY_STATE.UNINITIALIZED;
+        return;
       }
     }
 

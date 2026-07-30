@@ -236,7 +236,7 @@ class Document {
           _longestLineIndex = _calculateLongestLineIndex();
         }
 
-        if (lineIndex < _longestLineIndex) {
+        else if (lineIndex < _longestLineIndex) {
           _longestLineIndex++;
         }
         break;

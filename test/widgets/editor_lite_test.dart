@@ -1,7 +1,7 @@
 import 'package:editor_app/base/components/Cursor.dart';
 import 'package:editor_app/base/components/EditorLite.dart';
 import 'package:editor_app/base/components/Line.dart';
-import 'package:editor_app/base/models/Document.dart';
+import 'package:editor_app/base/models/EditorLiteModel.dart';
 import 'package:editor_app/base/models/EditorSettings.dart';
 import 'package:editor_app/constants/editor.dart';
 import 'package:flutter/services.dart';
@@ -10,11 +10,19 @@ import 'package:flutter_test/flutter_test.dart';
 import '../support/editor_test_support.dart';
 
 void main() {
+  EditorLiteModel? model;
+
   // edSettings is a global singleton; keep font size from leaking between tests.
-  tearDown(() => edSettings.setFontSize(FONT_SIZE));
+  tearDown(() {
+    edSettings.setFontSize(FONT_SIZE);
+    model?.destroy();
+    model = null;
+  });
 
   Future<void> pumpEditor(WidgetTester tester, String content) async {
-    await tester.pumpWidget(wrapEditor(EditorLite(document: Document(content))));
+    final built = editorLiteFor(content);
+    model = built.model;
+    await tester.pumpWidget(wrapEditor(built.widget));
     await tester.pump(); // post-frame focus for the active line
     await tester.pump();
   }

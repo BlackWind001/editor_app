@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:editor_app/base/components/EditorContainer.dart';
 import 'package:editor_app/base/components/EditorLite.dart';
 import 'package:editor_app/base/models/DirectoryWatchers.dart';
+import 'package:editor_app/base/models/EditorsSetModel.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -11,9 +12,17 @@ import '../support/fake_file_system.dart';
 
 void main() {
   late FakeFileSystem fs;
+  late EditorsSetModel esModel;
 
-  setUp(() => fs = FakeFileSystem());
+  setUp(() {
+    fs = FakeFileSystem();
+    esModel = EditorsSetModel();
+  });
+
   tearDown(() {
+    for (final editor in List.of(esModel.editors)) {
+      esModel.removeEditor(editor.document.id);
+    }
     DirectoryWatchers.unregisterAllListeners();
     fs.dispose();
   });
@@ -24,6 +33,23 @@ void main() {
       if (find.byType(EditorLite).evaluate().isNotEmpty) return;
       await tester.pump(const Duration(milliseconds: 10));
     }
+  }
+
+  Future<void> pumpFileEditor(WidgetTester tester, String path) async {
+    final untitledId = esModel.activeEditorModel!.document.id;
+    await esModel.addEditor(path, makeActiveEditor: true);
+    esModel.removeEditor(untitledId);
+
+    await tester.pumpWidget(
+      wrapEditor(
+        EditorContainer(
+          elModel: esModel.activeEditorModel!,
+          esModel: esModel,
+        ),
+      ),
+    );
+    await settleLoad(tester);
+    await settleEditorFocus(tester);
   }
 
   // Lets the save action's async chain (lastModified -> exists -> write) drain.
@@ -38,10 +64,7 @@ void main() {
         (tester) async {
       await IOOverrides.runWithIOOverrides(() async {
         fs.seed('/work/a.txt', 'alpha\nbeta\ngamma');
-        await tester.pumpWidget(
-          wrapEditor(EditorContainer(filePath: '/work/a.txt')),
-        );
-        await settleLoad(tester);
+        await pumpFileEditor(tester, '/work/a.txt');
 
         expect(find.byType(EditorLite), findsOneWidget);
         expect(find.text('beta'), findsOneWidget);
@@ -53,10 +76,7 @@ void main() {
     testWidgets('renders an empty editor for an empty file', (tester) async {
       await IOOverrides.runWithIOOverrides(() async {
         fs.seed('/work/empty.txt', '');
-        await tester.pumpWidget(
-          wrapEditor(EditorContainer(filePath: '/work/empty.txt')),
-        );
-        await settleLoad(tester);
+        await pumpFileEditor(tester, '/work/empty.txt');
 
         expect(find.byType(EditorLite), findsOneWidget);
       }, fs);
@@ -68,10 +88,7 @@ void main() {
         (tester) async {
       await IOOverrides.runWithIOOverrides(() async {
         fs.seed('/work/save.txt', 'hello');
-        await tester.pumpWidget(
-          wrapEditor(EditorContainer(filePath: '/work/save.txt')),
-        );
-        await settleLoad(tester);
+        await pumpFileEditor(tester, '/work/save.txt');
 
         await typeChar(tester, LogicalKeyboardKey.keyA, 'a'); // -> 'ahello'
         await sendEditorShortcut(tester, LogicalKeyboardKey.keyS);
@@ -84,10 +101,7 @@ void main() {
     testWidgets('saving preserves the multi-line structure', (tester) async {
       await IOOverrides.runWithIOOverrides(() async {
         fs.seed('/work/multi.txt', 'one\ntwo');
-        await tester.pumpWidget(
-          wrapEditor(EditorContainer(filePath: '/work/multi.txt')),
-        );
-        await settleLoad(tester);
+        await pumpFileEditor(tester, '/work/multi.txt');
 
         await pressKey(tester, LogicalKeyboardKey.arrowDown); // line 1, index 0
         await typeChar(tester, LogicalKeyboardKey.keyX, 'X'); // -> 'Xtwo'
@@ -101,9 +115,16 @@ void main() {
     testWidgets('typing with no backing file neither crashes nor loses the buffer',
         (tester) async {
       await IOOverrides.runWithIOOverrides(() async {
-        await tester.pumpWidget(wrapEditor(EditorContainer())); // filePath == null
+        await tester.pumpWidget(
+          wrapEditor(
+            EditorContainer(
+              elModel: esModel.activeEditorModel!,
+              esModel: esModel,
+            ),
+          ),
+        );
         await tester.pump();
-        await tester.pump();
+        await settleEditorFocus(tester);
 
         await typeChar(tester, LogicalKeyboardKey.keyA, 'a');
         await sendEditorShortcut(tester, LogicalKeyboardKey.keyS); // fails (logged)
@@ -120,10 +141,7 @@ void main() {
         (tester) async {
       await IOOverrides.runWithIOOverrides(() async {
         fs.seed('/work/ext.txt', 'original');
-        await tester.pumpWidget(
-          wrapEditor(EditorContainer(filePath: '/work/ext.txt')),
-        );
-        await settleLoad(tester);
+        await pumpFileEditor(tester, '/work/ext.txt');
 
         // Stand in for the watcher having detected an external change.
         editorDocument(tester).hasFileBeenModifiedExternally = true;

@@ -1,0 +1,13 @@
+---
+description: Only do the asked task; report other issues, don't fix without consent
+alwaysApply: true
+---
+
+# Stay Within the Asked Task
+
+When asked to perform a task:
+
+- Do **only** that task.
+- If other problems show up while working (failing tests, bugs, API mismatches, etc.), **tell the user** — do not fix, refactor, or “helpfully” change them unless they explicitly ask.
+- Do not make any change the user has not asked for without their consent.
+- The user wants to diagnose and fix unrelated issues themselves, in their own way.

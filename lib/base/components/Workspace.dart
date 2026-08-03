@@ -1,5 +1,7 @@
 import 'dart:async';
 import 'dart:developer';
+import 'dart:ffi';
+import 'dart:io';
 
 import 'package:editor_app/base/components/EditorContainer.dart';
 import 'package:editor_app/base/components/EditorsSet.dart';
@@ -7,8 +9,10 @@ import 'package:editor_app/base/components/TabsHeader.dart';
 import 'package:editor_app/base/helpers/ShortcutsAndActionMaps.dart';
 import 'package:editor_app/base/helpers/workspaceShortcutsAndActions.dart';
 import 'package:editor_app/base/models/DirectoryWatchers.dart';
+import 'package:editor_app/base/models/WorkspaceModel.dart';
 import 'package:flutter/material.dart';
 import 'package:file_selector/file_selector.dart';
+import 'package:path/path.dart' as path;
 
 class Workspace extends StatefulWidget {
   const Workspace({ super.key });
@@ -20,13 +24,42 @@ class Workspace extends StatefulWidget {
 class _Workspace extends State<Workspace> {
 
   late ShortcutsAndActionsMaps sAndAMaps;
-  String? workspacePath;
+  late WorkspaceViewModel model;
 
   @override
   void initState() {
     super.initState();
 
     sAndAMaps = getWorkspaceShortcutsAndActions(onOpenFolder: handleOpenWorkspace, onOpenFile: handleOpenFile);
+    model = WorkspaceViewModel();
+
+    // testRipGrep();
+  }
+
+  Future<void> testRipGrep () async {
+    final resourcesDir = path.join(path.dirname(Platform.resolvedExecutable), '..', 'Resources');
+    Abi arch = Abi.current();
+    String rg;
+
+    if (arch == Abi.macosArm64) {
+      rg = path.join(resourcesDir, 'rg-arm');
+
+    }
+    else if (arch == Abi.macosX64) {
+      rg = path.join(resourcesDir, 'rg-x86');
+    }
+    else {
+      throw('Workspace~testRipGrep: ERROR: Unsupported platform');
+    }
+
+    if (!(await File(rg).exists())) {
+      throw('Workspace~testRipGrep: ERROR: rg not found');
+    }
+
+    final result = await Process.run(rg, ['--version']);
+    print('Exit code: ${result.exitCode}');
+    print('Stdout: ${result.stdout}');
+    print('Stderr: ${result.stderr}');
   }
 
   @override
@@ -55,7 +88,7 @@ class _Workspace extends State<Workspace> {
       return;
     }
 
-    workspacePath = dirPath;
+    model.updatePath(dirPath);
   }
 
   void handleOpenWorkspace(OpenFolderIntent intent) {

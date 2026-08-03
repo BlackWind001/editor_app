@@ -22,6 +22,13 @@ Run using
 flutter run -d mac
 ```
 
+Ripgrep is now part of the macOS build (not part of the linux or windows builds!!!).
+Steps to build a binary (from the base folder path):
+```
+rm -rf external
+bash create_release_build.sh
+```
+
 ## Demo
 
 https://github.com/user-attachments/assets/e2eebdda-9ba7-4f17-bba2-26c3286d5340

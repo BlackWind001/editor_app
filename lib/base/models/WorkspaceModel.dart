@@ -1,40 +1,42 @@
 import 'dart:developer';
 import 'dart:io';
 
-class _WorkspaceModel {
-  String? _path;
-  Directory? _directory;
+class WorkspaceModel {
+  String path = '';
 
-  void _setPath (String wPath) async {
-    if (_path != null) {
-      throw('NOT IMPLEMENTED');
-    }
-
-    Directory pathDir = Directory(wPath);
-    bool exists = await pathDir.exists();
-
-    if (!exists) {
-      throw('Path does not exist');
-    }
-
-    _path = wPath;
-    _directory = pathDir;
+  String get dirName {
+    // ToDo: Get the path name here
+    return '';
   }
 
-  void _setupWatch () async {
-    if (_path == null) {
-      log(
-        'Cannot setup workspace watchers without a valid path',
-        name: '_WorkspaceModel._setupWatch'
-        );
-      return;
-    }
+  WorkspaceModel ();
+
+  WorkspaceModel.fromPath (String path) {
+    updatePath(path);
   }
 
-  void init (String wPath) {
-    _setPath(wPath);
-    _setupWatch();
+  void updatePath (String path) {
+    this.path = path;
   }
 }
 
-var WorkspaceInstance = _WorkspaceModel();
+class WorkspaceViewModel {
+  late WorkspaceModel model;
+  String name = 'WorkspaceViewModel';
+
+  WorkspaceViewModel () {
+    model = WorkspaceModel();
+  }
+
+  void updatePath (String path) async {
+    Directory pathDir = Directory(path);
+    String name = '${this.name}~updatePath';
+
+    if (!(await pathDir.exists())) {
+      throw('$name: Path does not exist');
+    }
+
+    model.updatePath(path);
+  }
+  
+}

@@ -15,3 +15,6 @@ const SHORTCUT_ACTIVATE_NEXT_EDITOR = 'activateNextEditor';
 const SHORTCUT_ACTIVATE_PREVIOUS_EDITOR = 'activatePreviousEditor';
 const SHORTCUT_CLOSE_CURRENT_EDITOR = 'closeCurrentEditor';
 const SHORTCUT_CREATE_NEW_EDITOR = 'createNewEditor';
+
+// Command Palette
+const SHORTCUT_TOGGLE_COMMAND_PALETTE = 'toggleCommandPalette';

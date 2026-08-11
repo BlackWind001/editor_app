@@ -28,7 +28,8 @@ var linuxShortcuts = <String, ShortcutCombo>{
   SHORTCUT_ACTIVATE_NEXT_EDITOR: ShortcutCombo(key: LogicalKeyboardKey.pageDown, control: true),
   SHORTCUT_ACTIVATE_PREVIOUS_EDITOR: ShortcutCombo(key: LogicalKeyboardKey.pageUp, control: true),
   SHORTCUT_CLOSE_CURRENT_EDITOR: ShortcutCombo(key: LogicalKeyboardKey.keyW, control: true),
-  SHORTCUT_CREATE_NEW_EDITOR: ShortcutCombo(key: LogicalKeyboardKey.keyN, control: true)
+  SHORTCUT_CREATE_NEW_EDITOR: ShortcutCombo(key: LogicalKeyboardKey.keyN, control: true),
+  SHORTCUT_TOGGLE_COMMAND_PALETTE: ShortcutCombo(key: LogicalKeyboardKey.keyP, control: true),
 };
 
 var macShortcuts = <String, ShortcutCombo>{
@@ -45,7 +46,8 @@ var macShortcuts = <String, ShortcutCombo>{
   SHORTCUT_ACTIVATE_NEXT_EDITOR: ShortcutCombo(key: LogicalKeyboardKey.arrowRight, meta: true, alt: true),
   SHORTCUT_ACTIVATE_PREVIOUS_EDITOR: ShortcutCombo(key: LogicalKeyboardKey.arrowLeft, meta: true, alt: true),
   SHORTCUT_CLOSE_CURRENT_EDITOR: ShortcutCombo(key: LogicalKeyboardKey.keyW, meta: true),
-  SHORTCUT_CREATE_NEW_EDITOR: ShortcutCombo(key: LogicalKeyboardKey.keyN, meta: true)
+  SHORTCUT_CREATE_NEW_EDITOR: ShortcutCombo(key: LogicalKeyboardKey.keyN, meta: true),
+  SHORTCUT_TOGGLE_COMMAND_PALETTE: ShortcutCombo(key: LogicalKeyboardKey.keyP, meta: true),
 };
 
 class Platformspecificshortcuts {

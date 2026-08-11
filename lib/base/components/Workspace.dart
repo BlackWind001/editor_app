@@ -3,9 +3,7 @@ import 'dart:developer';
 import 'dart:ffi';
 import 'dart:io';
 
-import 'package:editor_app/base/components/EditorContainer.dart';
-import 'package:editor_app/base/components/EditorsSet.dart';
-import 'package:editor_app/base/components/TabsHeader.dart';
+import 'package:editor_app/base/components/CommandPaletteWrapper.dart';
 import 'package:editor_app/base/helpers/ShortcutsAndActionMaps.dart';
 import 'package:editor_app/base/helpers/workspaceShortcutsAndActions.dart';
 import 'package:editor_app/base/models/DirectoryWatchers.dart';
@@ -101,7 +99,7 @@ class _Workspace extends State<Workspace> {
       shortcuts: sAndAMaps.shortcuts,
       child: Actions(
         actions: sAndAMaps.actions,
-        child: EditorsSet()
+        child: CommandPaletteWrapper()
       )
     );
   }

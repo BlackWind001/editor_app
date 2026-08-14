@@ -38,5 +38,11 @@ class WorkspaceViewModel {
 
     model.updatePath(path);
   }
+
+  String getWorkspacePath () {
+    return model.path;
+  }
   
 }
+
+final workspaceViewModel = WorkspaceViewModel();

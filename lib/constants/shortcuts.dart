@@ -9,7 +9,6 @@ const SHORTCUT_WORD_START = 'wordStart';
 const SHORTCUT_LINE_END = 'lineEnd';
 const SHORTCUT_LINE_START = 'lineStart';
 
-
 // EditorSet
 const SHORTCUT_ACTIVATE_NEXT_EDITOR = 'activateNextEditor';
 const SHORTCUT_ACTIVATE_PREVIOUS_EDITOR = 'activatePreviousEditor';
@@ -18,3 +17,6 @@ const SHORTCUT_CREATE_NEW_EDITOR = 'createNewEditor';
 
 // Command Palette
 const SHORTCUT_TOGGLE_COMMAND_PALETTE = 'toggleCommandPalette';
+
+// Global
+const SHORTCUT_UNIVERSAL_ESCAPE_ACTION = 'escape';

@@ -5,12 +5,7 @@ import 'package:editor_app/base/models/EditorLiteModel.dart';
 import 'package:editor_app/base/models/TabsModel.dart' as tm;
 import 'package:path/path.dart';
 
-enum READY_STATE {
-  LOADING,
-  LOADED,
-  ERROR,
-  UNINITIALIZED
-}
+enum READY_STATE { LOADING, LOADED, ERROR, UNINITIALIZED }
 
 class EditorsSetModel {
   late tm.TabsModel tabsModel;
@@ -19,14 +14,14 @@ class EditorsSetModel {
 
   READY_STATE state = READY_STATE.UNINITIALIZED;
 
-  EditorsSetModel () {
+  EditorsSetModel() {
     tabsModel = tm.TabsModel();
     editors = [];
 
     addEditor(null, makeActiveEditor: true);
   }
 
-  void _cleanupEditor (String id) {
+  void _cleanupEditor(String id) {
     final index = editors.indexWhere((d) => d.document.id == id);
 
     if (index == -1) {
@@ -41,7 +36,7 @@ class EditorsSetModel {
     editor.destroy();
   }
 
-  void removeEditor (String id) {
+  void removeEditor(String id) {
     state = READY_STATE.LOADING;
     int index = tabsModel.tabs.indexWhere((tab) => tab.id == id);
 
@@ -59,20 +54,17 @@ class EditorsSetModel {
     if (id == activeEditorModel?.document.id) {
       tm.SingleTabModel? tab;
       try {
-        tab = tabsModel.tabs.elementAtOrNull(index-1);
-      }
-      catch (e) {
+        tab = tabsModel.tabs.elementAtOrNull(index - 1);
+      } catch (e) {
         tab = null;
       }
       if (tabsModel.tabs.isNotEmpty) {
         if (tab != null) {
           setActiveEditor(tab.id);
-        }
-        else {
+        } else {
           setActiveEditor(tabsModel.tabs[index].id);
         }
-      }
-      else {
+      } else {
         setActiveEditor(null);
         state = READY_STATE.UNINITIALIZED;
         return;
@@ -82,8 +74,7 @@ class EditorsSetModel {
     state = READY_STATE.LOADED;
   }
 
-  void setActiveEditor (String? id) {
-
+  void setActiveEditor(String? id) {
     if (id == null) {
       activeEditorModel = null;
       return;
@@ -99,9 +90,10 @@ class EditorsSetModel {
     activeEditorModel = editors[eI];
   }
 
-
-  Future<String?> addEditor (String? filePath, { bool makeActiveEditor = false }) async {
-
+  Future<String?> addEditor(
+    String? filePath, {
+    bool makeActiveEditor = false,
+  }) async {
     state = READY_STATE.LOADING;
 
     const errorName = 'EditorsSetModel~addEditor';
@@ -112,20 +104,24 @@ class EditorsSetModel {
 
       editors.add(EditorLiteModel(document: d));
       // Then, create a tab for it in the tabsModel.
-      tabsModel.addTab(tm.SingleTabModel(id: d.id, type: '', title: 'Untitled'));
+      tabsModel.addTab(
+        tm.SingleTabModel(id: d.id, type: '', title: 'Untitled'),
+      );
       id = d.id;
-    }
-    else {
+    } else {
       // For file editor (aka when a filePath has been given)
       Document? d = await documentStore.createNewDocument(filePath);
 
       if (d == null) {
         log('Error: Could not load file: $filePath', name: errorName);
+        state = READY_STATE.ERROR;
         return null;
       }
 
       editors.add(EditorLiteModel(document: d));
-      tabsModel.addTab(tm.SingleTabModel(id: d.id, type: 'file', title: basename(filePath)));
+      tabsModel.addTab(
+        tm.SingleTabModel(id: d.id, type: 'file', title: basename(filePath)),
+      );
       id = d.id;
     }
 

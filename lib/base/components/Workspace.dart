@@ -13,25 +13,26 @@ import 'package:file_selector/file_selector.dart';
 import 'package:path/path.dart' as path;
 
 class Workspace extends StatefulWidget {
-  const Workspace({ super.key });
+  const Workspace({super.key});
 
   @override
   State<Workspace> createState() => _Workspace();
 }
 
 class _Workspace extends State<Workspace> {
-
   late ShortcutsAndActionsMaps sAndAMaps;
 
   @override
   void initState() {
     super.initState();
 
-    sAndAMaps = getWorkspaceShortcutsAndActions(onOpenFolder: handleOpenWorkspace, onOpenFile: handleOpenFile);
+    sAndAMaps = getWorkspaceShortcutsAndActions(
+      onOpenFolder: handleOpenWorkspace,
+    );
   }
 
   @override
-  void dispose () {
+  void dispose() {
     DirectoryWatchers.unregisterAllListeners();
     super.dispose();
   }
@@ -40,15 +41,7 @@ class _Workspace extends State<Workspace> {
     assert(true, "Reimplement the closeFile shortcut somewhere else");
   }
 
-  void _handleOF () async {
-    assert(true, "Reimplement the openFile shortcut somewhere else");
-  }
-
-  void handleOpenFile (OpenFileIntent intent) {
-    _handleOF();
-  }
-
-  void _handleOW () async {
+  void _handleOW() async {
     final String? dirPath = await getDirectoryPath();
 
     if (dirPath == null) {
@@ -69,8 +62,8 @@ class _Workspace extends State<Workspace> {
       shortcuts: sAndAMaps.shortcuts,
       child: Actions(
         actions: sAndAMaps.actions,
-        child: CommandPaletteWrapper()
-      )
+        child: CommandPaletteWrapper(),
+      ),
     );
   }
 }
